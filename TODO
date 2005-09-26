@@ -1,0 +1,9 @@
+Must:
+	More tests
+
+Maybe:
+	More errorhandling
+	Make subs check for permissions before executing
+	Make it possible to use MPD.pm in "light"-mode:
+		For small clients/scripts
+		Don't fetch outputs, commands etc.

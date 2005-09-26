@@ -1,0 +1,116 @@
+0.12.0-rc7+njh (Nicholas J Humfrey)
+ - Moved $sock and @playlists into object so that you can talk to 
+   multiple MPDs in the same script.
+ - Added Module::Build based build/install system
+ - Changed namespace to Audio::MPD so that it can be added to CPAN
+ - Documented class
+ - Changing 'END' handler to 'DESTROY'
+ - Changed <$sock> to $sock->getline
+ - Changed print $sock "foo" to $sock->print("foo")
+ - Corrected pause() so that it didn't use depricated lack of argument
+ - Added optional path parameter to updatedb()
+ 
+0.12.0-rc7
+ - better password-handling, including possibility to connect to
+ password@mpdhost (William Pettersson)
+ - made get_time_info work, and added more to the output
+ - made ALLOW_TOGGLE_STATES 1 by default
+
+0.12.0-rc6
+ - get_song_info() now uses current song, if none is specified
+ - mpc.pl now says that 'seek' is in seconds instead of percentage
+ - Fixed bug in close()
+ - Removed warn() in _get_playlist()
+ - Made MPD.pm more backwards compatible (Martin Stolle)
+ - Added get_current_song_info() (Martin Stolle)
+ - Made internal sub _process_feedback() more robust (Martin Stolle)
+ - Update get_title() to be more flexible (Martin Stolle)
+
+0.12.0-rc5 (No more fires!-release)
+ - Fixed bug in save() (Laurent Monrouzies)
+ - Removed annoying line in set_random() (Dale Francum)
+ - Added get_time_info (Thanks Dale Francum)
+ - Removed 'use Data::Dumper;' from mpc.pl and MPD.pm
+ - Added support for new MPD-functions:
+ 'outputs', 'enableoutputs', 'disableoutputs', 'commands' and 'notcommands'
+ - Fixed bug in get_title() where old title would get returned
+ - Fixed bug where playlist was not updated (hannes)
+ - Added playlist_changes() so clients can update their playlist (hannes)
+ - Updated _get_playlist() (hannes)
+
+0.12.0-rc4
+ - Old bug where $playlist[0] contained undef removed again :)
+ - crop() function added (removes all songs but the playing)
+ - Fixed some bugs and errorhandling in mpc.pl
+
+0.12.0-rc3
+ - (almost) total rewrite of module
+
+0.12.0-rc2
+ - Changed default port to 6600
+ - Removed UNPAUSE_ON_PLAY setting, as this is now default in MPD
+ - Added urlhandlers()
+ - Fixed seek()
+ - Small bugfixes
+ - Bugfixes in mpc.pl (playlist() and volume())
+ - Updated ACK-error handling (geterror() changed, seterror() added)
+ - Add 'plchanges'-support in getplaylist()
+ - Added $config{'ALLOW_TOGGLE_STATES'}
+ - Added deleteid() / moveid() / playid() / seekid() / swapid()
+ - Removed deprecated 'unpause-on-play'-code
+
+0.10.0-rc1
+ - No changes
+
+0.10.0-alpha7
+ - Major speedup. Playlist was fetched way too many times
+ - Another major speedup. Playlist is now only fetched when needed!
+ - Added %config, for changing default behavior
+ - Old $number-- in play() was removed.
+ - Stupid bug where last song was not saved in @playlist removed
+ - Rewrote searchadd() to utilize 'command_list_begin'/'command_list_end' (Much faster now)
+ - Fixed bug where search() didn't return the last song found
+ - Small rewrite in setrepeat() and setrandom()
+ - Typos
+ - Fixed bugs and bugs and bugs and bugs
+ - Added a destructor
+ - Rewrote all pod-documentation
+ - Tabindented all
+ - Removed 'unfinished subs' and 'todo'
+ - Probably more stuff
+
+0.10.0-alpha6
+ - Changed @playlist syntax ($playlist[song-number]{info-to-get} eg. $playlist[42]{'file'})
+ - Removed deprecated getsonginfo()
+ - Moved gettitle() and gettimeformat() to 'Custom subs'
+ - Altered gettitle()'s errorhandling a bit
+ 
+0.10.0-alpha5
+ - Made getsonginfo() return a hash instead of an array
+ - Streamlined add()/delete()/move()/swap()
+ - Made (almost) all functions undef on succes and 1 on error. Last error can be retrieved by $self->geterror()
+ - search() now accepts filenames too (thanks sbh)
+ - delete() can take ranges (thanks sbh)
+ - Added the 'Custom functions'-part
+ - Added searchadd() (thanks sbh)
+ - Repaired add()
+ - Added playlist()
+
+0.10.0-alpha4
+ - Fixed bug where last song on playlist was not present
+ - Made getstatus() call playlistinfo if playlist had changed
+ - Implemented getsonginfo() for returning information from @playlist (Thanks msells)
+ - Added $self->{module_version}
+ - Empties @playlist, when renewing it
+ - A bit of optimizing and cleanup around getplaylist (Thanks msells)
+
+0.10.0-alpha3
+ - Fixed error in add()-comments
+ - Moved $host and $port parameter to new() - It finally works!
+
+0.10.0-alpha2
+ - Added nextinfo() and changed lsinfo() and listallinfo()
+ - Changed version-numbering to fit MPD standards
+
+0.1
+ - Initial release
