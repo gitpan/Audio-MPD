@@ -26,7 +26,7 @@ use IO::Socket;
 use warnings;
 use strict;
 
-our $VERSION = '0.12.1';
+our $VERSION = '0.12.2';
 
 
 
@@ -307,7 +307,7 @@ sub playid
 
 sub pause
 {
-	my($self,$state) = shift;
+	my($self,$state) = @_;
 	
 	# Default is to pause
 	$state = 1 unless (defined $state);
