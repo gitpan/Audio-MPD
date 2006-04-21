@@ -10,3 +10,4 @@ scripts/mpc.pl
 t/00use.t
 TODO
 META.yml
+Makefile.PL

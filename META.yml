@@ -1,6 +1,6 @@
 ---
 name: Audio-MPD
-version: 0.12.2
+version: 0.12.3
 author:
   - Written by Tue Abrahamsen (twoface@wtf.dk)
   - 'Documented by Nicholas J. Humfrey, njh@aelius.com'
@@ -14,5 +14,5 @@ build_requires:
 provides:
   Audio::MPD:
     file: lib/Audio/MPD.pm
-    version: 0.12.2
+    version: 0.12.3
 generated_by: Module::Build version 0.2611

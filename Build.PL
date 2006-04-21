@@ -13,6 +13,9 @@ my $build = Module::Build->new
 	build_requires => {
 		'Module::Build' => '0.20'
 	},
+	
+	create_makefile_pl => 'passthrough',
+	
 	requires => {
 		'IO::Socket'	=> '1.00',
 		'Test' 			=> '1.00',
@@ -20,9 +23,3 @@ my $build = Module::Build->new
 );
 
 $build->create_build_script();
-
-
-# This method writes a 'dummy' Makefile that will pass all commands
-# through to the corresponding Module::Build actions.
-Module::Build::Compat->write_makefile(
-	build_class => 'Module::Build');

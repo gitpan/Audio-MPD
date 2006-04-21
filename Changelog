@@ -1,3 +1,6 @@
+0.12.3 (Nicholas J Humfrey)
+ - Added Makefile.PL support
+
 0.12.2 (Nicholas J Humfrey)
  - Fixed bug in parsing parmeters in pause()
 
