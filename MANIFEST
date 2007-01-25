@@ -3,11 +3,13 @@ Build.PL
 Changelog
 COPYING
 lib/Audio/MPD.pm
-MANIFEST
+Makefile.PL
+MANIFEST			This list of files
+META.yml
 README
 scripts/example.pl
 scripts/mpc.pl
+t/00-pod-coverage.t
+t/00-pod.t
 t/00use.t
 TODO
-META.yml
-Makefile.PL
