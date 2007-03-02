@@ -13,12 +13,13 @@ my $build = Module::Build->new
 	build_requires => {
 		'Module::Build' => '0.20'
 	},
-	
+
 	create_makefile_pl => 'passthrough',
-	
+
 	requires => {
-		'IO::Socket'	=> '1.00',
-		'Test' 			=> '1.00',
+        'Class::Accessor' => '0',
+		'IO::Socket'	=> '0',
+		'Test' 			=> '0',
 	},
 );
 
