@@ -28,7 +28,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _host _password _port version ] );
 
 
-our $VERSION = '0.13.1';
+our $VERSION = '0.13.2';
 
 
 #--
@@ -47,9 +47,9 @@ sub new {
     my ($host, $port, $password) = @_;
 
     # use mpd defaults.
-    $host     ||= $ENV{MPD_HOST}     || 'localhost';
-    $port     ||= $ENV{MPD_PORT}     || '6600';
-    $password ||= $ENV{MPD_PASSWORD} || '';
+    $host     = $ENV{MPD_HOST}     || 'localhost' unless defined $host;
+    $port     = $ENV{MPD_PORT}     || '6600'      unless defined $port;
+    $password = $ENV{MPD_PASSWORD} || ''          unless defined $password;
 
     # create & bless the object.
     my $self = {
@@ -66,42 +66,8 @@ sub new {
 }
 
 
-
-#--
-# Public methods
-
-
-#
-# $mpd->ping;
-#
-# Sends a ping command to the mpd server.
-#
-sub ping {
-    my ($self) = @_;
-    $self->_send_command( "ping\n" );
-}
-
-
-sub stats {
-    my ($self) = @_;
-    my %kv =
-        map { /^([^:]+):\s+(\S+)$/ ? ($1 => $2) : () }
-        $self->_send_command( "stats\n" );
-    return \%kv;
-}
-
-
-sub status {
-    my ($self) = @_;
-    my @output = $self->_send_command( "status\n" );
-    my $status = Audio::MPD::Status->new( @output );
-    return $status;
-}
-
-
 #--
 # Private methods
-
 
 
 #
@@ -170,26 +136,76 @@ sub _send_command {
 
 
 
+#--
+# Public methods
+
+# -- MPD interaction: general
+
+#
+# $mpd->ping;
+#
+# Sends a ping command to the mpd server.
+#
+sub ping {
+    my ($self) = @_;
+    $self->_send_command( "ping\n" );
+}
 
 
-###############################################################
-#                       BASIC METHODS                         #
-#-------------------------------------------------------------#
-#  This section contains all basic methods for the module to  #
-#     function, internal methods and methods not returning    #
-#      or altering information about playback and alike.      #
-###############################################################
-
-
+#
+# $mpd->kill;
+#
+# Send a message to the MPD server telling it to shut down.
+#
 sub kill {
     my ($self) = @_;
     $self->_send_command("kill\n");
 }
 
+
+# -- MPD interaction: volume & output handling
+
+
+sub output_enable {
+    my ($self, $output) = @_;
+    $self->_send_command("enableoutput $output\n");
+}
+
+sub output_disable {
+    my ($self, $output) = @_;
+    $self->_send_command("disableoutput $output\n");
+}
+
+
+
+# -- MPD interaction: info retrieving
+
+sub stats {
+    my ($self) = @_;
+    my %kv =
+        map { /^([^:]+):\s+(\S+)$/ ? ($1 => $2) : () }
+        $self->_send_command( "stats\n" );
+    return \%kv;
+}
+
+
+sub status {
+    my ($self) = @_;
+    my @output = $self->_send_command( "status\n" );
+    my $status = Audio::MPD::Status->new( @output );
+    return $status;
+}
+
+
+
+=for FIXME
+
 sub send_password {
     my ($self) = @_;
     $self->ping; # ping sends a command, and thus the password is sent
 }
+
+=cut
 
 sub get_urlhandlers {
     my ($self) = @_;
@@ -239,15 +255,6 @@ sub volume {
     $self->_send_command("setvol $volume\n");
 }
 
-sub output_enable {
-    my ($self, $output) = @_;
-    $self->_send_command("enableoutput $output\n");
-}
-
-sub output_disable {
-    my ($self, $output) = @_;
-    $self->_send_command("disableoutput $output\n");
-}
 
 ###############################################################
 #                METHODS FOR COMMON PLAYBACK                  #
@@ -259,13 +266,13 @@ sub output_disable {
 sub play {
     my ($self, $number) = @_;
     $number ||= '';
-    $self->_send_command("play $number");
+    $self->_send_command("play $number\n");
 }
 
 sub playid {
     my ($self, $number) = @_;
     $number ||= '';
-    $self->_send_command("playid $number");
+    $self->_send_command("playid $number\n");
 }
 
 sub pause {
