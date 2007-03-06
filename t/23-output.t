@@ -29,35 +29,38 @@ use Test::More;
 eval 'use Audio::MPD::Test';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
-plan tests => 4;
+plan tests => 3;
 my $mpd = Audio::MPD->new;
 
 
 #
-# testing mpd version.
-SKIP: {
-    my $output = qx[mpd --version 2>/dev/null];
-    skip 'need mpd installed', 1 unless $output =~ /^mpd .* ([\d.]+)\n/;
-    is( $mpd->version, $1, 'mpd version grabbed during connection' );
-}
+# testing absolute volume.
+$mpd->volume(10); # init to sthg that we know
+$mpd->volume(42);
+is( $mpd->status->volume, 42, 'setting volume' );
+
+#
+# testing positive relative volume.
+$mpd->volume('+9');
+is( $mpd->status->volume, 51, 'increasing volume' );
+
+#
+# testing negative relative volume.
+$mpd->volume('-4');
+is( $mpd->status->volume, 47, 'decreasing volume' );
 
 
 #
-# testing kill.
-$mpd->ping;
-$mpd->kill;
-eval { $mpd->ping };
-like( $@, qr/^Could not create socket:/, 'kill shuts mpd down' );
-start_test_mpd();
-
+# testing disable_output.
+# $mpd->output_disable(0);
+# sleep(1);
+# like( $mpd->status->error, qr/^problems/, 'disabling output' );
 
 #
-# testing password changing.
-eval { $mpd->password('b0rken') };
-like( $@, qr/\{password\} incorrect password/, 'changing password' );
-eval { $mpd->password() }; # default to empty string.
-is( $@, '', 'no password = empty password' );
-
+# testing enable_output.
+# $mpd->output_enable(0);
+# sleep(1);
+# is( $mpd->status->error, undef, 'enabling output' );
 
 
 exit;

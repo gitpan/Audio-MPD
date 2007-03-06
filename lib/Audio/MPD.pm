@@ -28,7 +28,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _host _password _port version ] );
 
 
-our $VERSION = '0.13.3';
+our $VERSION = '0.13.4';
 
 
 #--
@@ -153,6 +153,15 @@ sub ping {
 
 
 #
+# my $version = $mpd->version;
+#
+# Return version of MPD server's connected.
+#
+# sub version {} # implemented as an accessor.
+#
+
+
+#
 # $mpd->kill;
 #
 # Send a message to the MPD server telling it to shut down.
@@ -163,7 +172,53 @@ sub kill {
 }
 
 
+#
+# $mpd->password( [$password] )
+#
+# Change password used to communicate with MPD server to $password.
+# Empty string is assumed if $password is not supplied.
+#
+sub password {
+    my ($self, $passwd) = @_;
+    $passwd ||= '';
+    $self->_password($passwd);
+    $self->ping; # ping sends a command, and thus the password is sent
+}
+
+
+#
+# $mpd->updatedb( [$path] );
+#
+# Force mpd to recan its collection. If $path (relative to MPD's music
+# directory) is supplied, MPD will only scan it - otherwise, MPD will rescan
+# its whole collection.
+#
+sub updatedb {
+    my ($self, $path) = @_;
+    $path ||= '';
+    $self->_send_command("update $path\n");
+}
+
+
+
 # -- MPD interaction: volume & output handling
+
+#
+# $mpd->volume( [+][-]$volume );
+#
+# Sets the audio output volume percentage to absolute $volume.
+# If $volume is prefixed by '+' or '-' then the volume is changed relatively
+# by that value.
+#
+sub volume {
+    my ($self, $volume) = @_;
+
+    if ($volume =~ /^(-|\+)(\d+)/ )  {
+        my $current = $self->status->volume;
+        $volume = $1 eq '+' ? $current + $2 : $current - $2;
+    }
+    $self->_send_command("setvol $volume\n");
+}
 
 
 sub output_enable {
@@ -196,16 +251,6 @@ sub status {
     return $status;
 }
 
-
-
-=for FIXME
-
-sub send_password {
-    my ($self) = @_;
-    $self->ping; # ping sends a command, and thus the password is sent
-}
-
-=cut
 
 sub get_urlhandlers {
     my ($self) = @_;
@@ -243,16 +288,6 @@ sub fade {
     my ($self, $value) = @_;
     $value ||= 0;
     $self->_send_command("crossfade $value\n");
-}
-
-sub volume {
-    my ($self, $volume) = @_;
-
-    if ($volume =~ /^(-|\+)(\d+)/ )  {
-        my $current = $self->status->volume;
-        $volume = $1 eq '+' ? $current + $2 : $current - $2;
-    }
-    $self->_send_command("setvol $volume\n");
 }
 
 
@@ -310,31 +345,27 @@ sub seekid {
     $self->_send_command( "seekid $song $time\n" );
 }
 
-###############################################################
-#               METHODS FOR PLAYLIST-HANDLING                 #
-#-------------------------------------------------------------#
-#  This section contains all methods which has anything to do #
-#            with the current or saved playlists.             #
-###############################################################
+# -- MPD interaction: info retrieving
+
 
 #
-# $mpd->clear()
+# $mpd->add( $path );
 #
-# Remove all the songs from the current playlist. No return value.
+# Add the song identified by $path (relative to MPD's music directory) to
+# the current playlist. No return value.
 #
-sub clear {
-    my ($self) = @_;
-    $self->_send_command("clear\n");
-}
-
-
-
 sub add {
     my ($self, $path) = @_;
-    return unless defined $path;
+    $path ||= '';
     $self->_send_command( qq[add "$path"\n] );
 }
 
+
+#
+# $mpd->delete( $song [, $song [...] ] );
+#
+# Remove song number $song from the current playlist. No return value.
+#
 sub delete {
     my ($self, @songs) = @_;
     my $command =
@@ -344,25 +375,58 @@ sub delete {
     $self->_send_command( $command );
 }
 
+
+#
+# $mpd->deleteid( $songid [, $songid [...] ]);
+#
+# Remove the specified $songid from the current playlist. No return value.
+#
 sub deleteid {
     my ($self, @songs) = @_;
     my $command =
           "command_list_begin\n"
-        . join( '', map { "delete $_\n" } @songs )
+        . join( '', map { "deleteid $_\n" } @songs )
         . "command_list_end\n";
     $self->_send_command( $command );
 }
+
+
+#
+# $mpd->clear;
+#
+# Remove all the songs from the current playlist. No return value.
+#
+sub clear {
+    my ($self) = @_;
+    $self->_send_command("clear\n");
+}
+
+
+#
+# $mpd->crop;
+#
+#  Remove all of the songs from the current playlist *except* the current one.
+#
+sub crop {
+    my ($self) = @_;
+
+    my $status = $self->status;
+    my $cur = $status->song;
+    my $len = $status->playlistlength - 1;
+
+    my $command =
+          "command_list_begin\n"
+        . join( '', map { $_  != $cur ? "delete $_\n" : '' } reverse 0..$len )
+        . "command_list_end\n";
+    $self->_send_command( $command );
+}
+
+
 
 sub load {
     my ($self, $playlist) = @_;
     return unless defined $playlist;
     $self->_send_command( qq[load "$playlist"\n] );
-}
-
-sub updatedb {
-    my ($self, $path) = @_;
-    $path ||= '';
-    $self->_send_command("update $path\n");
 }
 
 sub swap {
@@ -550,20 +614,6 @@ sub searchadd {
 }
 
 
-sub crop {
-    my ($self) = @_;
-
-    my $status = $self->status;
-    my $cur = $status->song;
-    my $len = $status->playlistlength - 1;
-
-    my $command =
-          "command_list_begin\n"
-        . join( '', map { $_  != $cur ? "delete $_\n" : '' } 0..$len )
-        . "command_list_end\n";
-    $self->_send_command( $command );
-}
-
 
 sub playlist {
     my ($self) = @_;
@@ -734,6 +784,29 @@ hostname, seperated with an '@' character.
 Sends a ping command to the mpd server.
 
 
+=item $mpd->version()
+
+Return the version number for the server we are connected to.
+
+
+=item $mpd->kill()
+
+Send a message to the MPD server telling it to shut down.
+
+
+=item $mpd->password( [$password] )
+
+Change password used to communicate with MPD server to $password.
+Empty string is assumed if $password is not supplied.
+
+
+=item $mpd->updatedb( [$path] )
+
+Force mpd to recan its collection. If $path (relative to MPD's music directory)
+is supplied, MPD will only scan it - otherwise, MPD will rescan its whole
+collection.
+
+
 =item $mpd->stats()
 
 Return a hashref with the number of artists, albums, songs in the database,
@@ -748,18 +821,6 @@ MPD server settings. Check the embedded pod for more information on the
 available accessors.
 
 
-=item $mpd->kill()
-
-Send a message to the MPD server telling it to shut down.
-
-
-=item $mpd->updatedb( [$path] )
-
-Force mpd to recan its collection. If $path (relative to MPD's music directory)
-is supplied, MPD will only scan it - otherwise, MPD will rescan its whole
-collection.
-
-
 =item $mpd->send_password( password )
 
 Send a plaintext password to the server,
@@ -770,10 +831,6 @@ which can enable optionally password protected functionality.
 
 Return an array of supported URL schemes.
 
-
-=item $mpd->version()
-
-Return the version number for the server we are connected to.
 
 =back
 
@@ -874,6 +931,22 @@ Seek to $time seconds in song ID $songid.
 
 =over 4
 
+=item $mpd->add( $path )
+
+Add the song identified by $path (relative to MPD's music directory) to the
+current playlist. No return value.
+
+
+=item $mpd->delete( $song )
+
+Remove song number $song from the current playlist. No return value.
+
+
+=item $mpd->deleteid( $songid )
+
+Remove the specified $songid from the current playlist. No return value.
+
+
 =item $mpd->clear()
 
 Remove all the songs from the current playlist. No return value.
@@ -883,22 +956,6 @@ Remove all the songs from the current playlist. No return value.
 
 Remove all of the songs from the current playlist *except* the
 song currently playing.
-
-
-=item $mpd->add( $path )
-
-Add the song identified by $path (relative to MPD's music directory) to the
-current playlist. No return value.
-
-
-=item $mpd->delete( $song )
-
-Remove song number $song from the current playlist.No return value.
-
-
-=item $mpd->deleteid( $songid )
-
-Remove the specified $songid from the current playlist. No return value.
 
 
 =item $mpd->swap( $song1, $song2 )
