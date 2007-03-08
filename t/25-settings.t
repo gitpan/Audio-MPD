@@ -29,43 +29,40 @@ use Test::More;
 eval 'use Audio::MPD::Test';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
-plan tests => 5;
+plan tests => 10;
 my $mpd = Audio::MPD->new;
 
 
 #
-# testing absolute volume.
-$mpd->volume(10); # init to sthg that we know
-$mpd->volume(42);
-is( $mpd->status->volume, 42, 'setting volume' );
-
-#
-# testing positive relative volume.
-$mpd->volume('+9');
-is( $mpd->status->volume, 51, 'increasing volume' );
-
-#
-# testing negative relative volume.
-$mpd->volume('-4');
-is( $mpd->status->volume, 47, 'decreasing volume' );
+# testing repeat
+$mpd->repeat(1);
+is( $mpd->status->repeat, 1, 'enabling repeat mode' );
+$mpd->repeat(0);
+is( $mpd->status->repeat, 0, 'disabling repeat mode' );
+$mpd->repeat;
+is( $mpd->status->repeat, 1, 'toggling repeat mode to on' );
+$mpd->repeat;
+is( $mpd->status->repeat, 0, 'toggling repeat mode to off' );
 
 
 #
-# testing disable_output.
-$mpd->add( 'title.ogg' );
-$mpd->add( 'dir1/title-artist-album.ogg' );
-$mpd->add( 'dir1/title-artist.ogg' );
-$mpd->play;
-$mpd->output_disable(0);
-sleep(1);
-like( $mpd->status->error, qr/^problems/, 'disabling output' );
+# testing random
+$mpd->random(1);
+is( $mpd->status->random, 1, 'enabling random mode' );
+$mpd->random(0);
+is( $mpd->status->random, 0, 'disabling random mode' );
+$mpd->random;
+is( $mpd->status->random, 1, 'toggling random mode to on' );
+$mpd->random;
+is( $mpd->status->random, 0, 'toggling random mode to off' );
+
 
 #
-# testing enable_output.
-$mpd->output_enable(0);
-sleep(1);
-$mpd->play; $mpd->pause;
-is( $mpd->status->error, undef, 'enabling output' );
+# testing fade
+$mpd->fade(15);
+is( $mpd->status->xfade, 15, 'enabling fading' );
+$mpd->fade;
+is( $mpd->status->xfade,  0, 'disabling fading by default' );
 
 
 exit;

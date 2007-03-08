@@ -29,43 +29,38 @@ use Test::More;
 eval 'use Audio::MPD::Test';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
-plan tests => 5;
+plan tests => 10;
 my $mpd = Audio::MPD->new;
 
 
 #
-# testing absolute volume.
-$mpd->volume(10); # init to sthg that we know
-$mpd->volume(42);
-is( $mpd->status->volume, 42, 'setting volume' );
-
-#
-# testing positive relative volume.
-$mpd->volume('+9');
-is( $mpd->status->volume, 51, 'increasing volume' );
-
-#
-# testing negative relative volume.
-$mpd->volume('-4');
-is( $mpd->status->volume, 47, 'decreasing volume' );
-
-
-#
-# testing disable_output.
+# testing stats
+$mpd->updatedb;
 $mpd->add( 'title.ogg' );
 $mpd->add( 'dir1/title-artist-album.ogg' );
 $mpd->add( 'dir1/title-artist.ogg' );
-$mpd->play;
-$mpd->output_disable(0);
-sleep(1);
-like( $mpd->status->error, qr/^problems/, 'disabling output' );
+my $stats = $mpd->stats;
+is( $stats->{artists},      1, 'one artist in the database' );
+is( $stats->{albums},       1, 'one album in the database' );
+is( $stats->{songs},        4, '4 songs in the database' );
+is( $stats->{playtime},     0, 'already played 0 seconds' );
+is( $stats->{db_playtime},  8, '8 seconds worth of music in the db' );
+isnt( $stats->{uptime}, undef, 'uptime is defined' );
+is( $stats->{db_update},    0, 'no database update' );
+
 
 #
-# testing enable_output.
-$mpd->output_enable(0);
-sleep(1);
-$mpd->play; $mpd->pause;
-is( $mpd->status->error, undef, 'enabling output' );
+# testing status.
+$mpd->play;
+$mpd->pause;
+my $status = $mpd->status;
+isa_ok( $status, 'Audio::MPD::Status', 'status return an Audio::MPD::Status object' );
 
+
+#
+# testing urlhandlers.
+my @handlers = $mpd->urlhandlers;
+is( scalar @handlers,     1, 'only one url handler supported' );
+is( $handlers[0], 'http://', 'only http is supported by now' );
 
 exit;

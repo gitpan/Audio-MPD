@@ -28,7 +28,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _host _password _port version ] );
 
 
-our $VERSION = '0.13.4';
+our $VERSION = '0.13.5';
 
 
 #--
@@ -139,7 +139,7 @@ sub _send_command {
 #--
 # Public methods
 
-# -- MPD interaction: general
+# -- MPD interaction: general commands
 
 #
 # $mpd->ping;
@@ -201,7 +201,7 @@ sub updatedb {
 
 
 
-# -- MPD interaction: volume & output handling
+# -- MPD interaction: handling volume & output
 
 #
 # $mpd->volume( [+][-]$volume );
@@ -221,11 +221,22 @@ sub volume {
 }
 
 
+#
+# $mpd->output_enable( $output );
+#
+# Enable the specified audio output. $output is the ID of the audio output.
+#
 sub output_enable {
     my ($self, $output) = @_;
     $self->_send_command("enableoutput $output\n");
 }
 
+
+#
+# $mpd->output_disable( $output );
+#
+# Disable the specified audio output. $output is the ID of the audio output.
+#
 sub output_disable {
     my ($self, $output) = @_;
     $self->_send_command("disableoutput $output\n");
@@ -233,8 +244,15 @@ sub output_disable {
 
 
 
-# -- MPD interaction: info retrieving
+# -- MPD interaction: retrieving info
 
+#
+# $mpd->stats;
+#
+# Return a hashref with the number of artists, albums, songs in the database,
+# as well as mpd uptime, the playtime of the playlist / the database and the
+# last update of the database.
+#
 sub stats {
     my ($self) = @_;
     my %kv =
@@ -244,6 +262,13 @@ sub stats {
 }
 
 
+#
+# my $status = $mpd->status;
+#
+# Return a Audio::MPD::Status object with various information on current
+# MPD server settings. Check the embedded pod for more information on the
+# available accessors.
+#
 sub status {
     my ($self) = @_;
     my @output = $self->_send_command( "status\n" );
@@ -252,7 +277,12 @@ sub status {
 }
 
 
-sub get_urlhandlers {
+#
+# my @handlers = $mpd->urlhandlers;
+#
+# Return an array of supported URL schemes.
+#
+sub urlhandlers {
     my ($self) = @_;
     my @handlers =
         map { /^handler: (.+)$/ ? $1 : () }
@@ -261,29 +291,46 @@ sub get_urlhandlers {
 }
 
 
-###############################################################
-#               METHODS FOR ALTERING SETTINGS                 #
-#-------------------------------------------------------------#
-#  This section contains methods used for altering different  #
-#                     settings in MPD.                        #
-###############################################################
+# -- MPD interaction: altering settings
 
+#
+# $mpd->repeat( [$repeat] );
+#
+# Set the repeat mode to $repeat (1 or 0). If $repeat is not specified then
+# the repeat mode is toggled.
+#
 sub repeat {
     my ($self, $mode) = @_;
 
-    $mode ||= not $self->status->repeat; # toggle if no param
+    $mode = not $self->status->repeat
+        unless defined $mode; # toggle if no param
     $mode = $mode ? 1 : 0;               # force integer
     $self->_send_command("repeat $mode\n");
 }
 
+
+#
+# $mpd->random( [$random] );
+#
+# Set the random mode to $random (1 or 0). If $random is not specified then
+# the random mode is toggled.
+#
 sub random {
     my ($self, $mode) = @_;
 
-    $mode ||= not $self->status->random; # toggle if no param
+    $mode = not $self->status->random
+        unless defined $mode; # toggle if no param
     $mode = $mode ? 1 : 0;               # force integer
     $self->_send_command("random $mode\n");
 }
 
+
+#
+# $mpd->fade( [$seconds] );
+#
+# Enable crossfading and set the duration of crossfade between songs. If
+# $seconds is not specified or $seconds is 0, then crossfading is disabled.
+#
 sub fade {
     my ($self, $value) = @_;
     $value ||= 0;
@@ -291,62 +338,109 @@ sub fade {
 }
 
 
-###############################################################
-#                METHODS FOR COMMON PLAYBACK                  #
-#-------------------------------------------------------------#
-#   This section contains the most commonly used methods for  #
-#                    altering playback.                       #
-###############################################################
+# -- MPD interaction: controlling playback
 
+#
+# $mpd->play( [$song] );
+#
+# Begin playing playlist at song number $song. If no argument supplied,
+# resume playing.
+#
 sub play {
     my ($self, $number) = @_;
     $number ||= '';
     $self->_send_command("play $number\n");
 }
 
+#
+# $mpd->playid( [$songid] );
+#
+# Begin playing playlist at song ID $songid. If no argument supplied,
+# resume playing.
+#
 sub playid {
     my ($self, $number) = @_;
     $number ||= '';
     $self->_send_command("playid $number\n");
 }
 
+
+#
+# $mpd->pause( [$sate] );
+#
+# Pause playback. If $state is 0 then the current track is unpaused, if
+# $state is 1 then the current track is paused.
+#
+# Note that if $state is not given, pause state will be toggled.
+#
 sub pause {
     my ($self, $state) = @_;
     $state ||= ''; # default is to toggle
     $self->_send_command("pause $state\n");
 }
 
+
+#
+# $mpd->stop;
+#
+# Stop playback.
+#
 sub stop {
     my ($self) = @_;
     $self->_send_command("stop\n");
 }
 
+
+#
+# $mpd->next;
+#
+# Play next song in playlist.
+#
 sub next {
     my ($self) = @_;
     $self->_send_command("next\n");
 }
 
+#
+# $mpd->prev;
+#
+# Play previous song in playlist.
+#
 sub prev {
     my($self) = shift;
     $self->_send_command("previous\n");
 }
 
+
+#
+# $mpd->seek( $time, [$song]);
+#
+# Seek to $time seconds in song number $song. If $song number is not specified
+# then the perl module will try and seek to $time in the current song.
+#
 sub seek {
     my ($self, $time, $song) = @_;
     $time ||= 0; $time = int $time;
-    $song = $self->status->song || 0 if not defined $song; # seek in current song
+    $song = $self->status->song if not defined $song; # seek in current song
     $self->_send_command( "seek $song $time\n" );
 }
 
+
+#
+# $mpd->seekid( $time, $songid );
+#
+# Seek to $time seconds in song ID $songid. If $song number is not specified
+# then the perl module will try and seek to $time in the current song.
+#
 sub seekid {
     my ($self, $time, $song) = @_;
     $time ||= 0; $time = int $time;
-    $song ||= 0; $song = int $song;
+    $song = $self->status->songid if not defined $song; # seek in current song
     $self->_send_command( "seekid $song $time\n" );
 }
 
-# -- MPD interaction: info retrieving
 
+# -- MPD interaction: handling playlist
 
 #
 # $mpd->add( $path );
@@ -356,7 +450,6 @@ sub seekid {
 #
 sub add {
     my ($self, $path) = @_;
-    $path ||= '';
     $self->_send_command( qq[add "$path"\n] );
 }
 
@@ -423,12 +516,6 @@ sub crop {
 
 
 
-sub load {
-    my ($self, $playlist) = @_;
-    return unless defined $playlist;
-    $self->_send_command( qq[load "$playlist"\n] );
-}
-
 sub swap {
     my ($self, $from, $to) = @_;
     $self->_send_command("swap $from $to\n");
@@ -454,10 +541,10 @@ sub moveid {
     $self->_send_command("moveid $song $pos\n");
 }
 
-sub rm {
+sub load {
     my ($self, $playlist) = @_;
     return unless defined $playlist;
-    $self->_send_command( qq[rm "$playlist"\n] );
+    $self->_send_command( qq[load "$playlist"\n] );
 }
 
 sub save {
@@ -484,6 +571,16 @@ sub save {
 =cut
 
 }
+
+sub rm {
+    my ($self, $playlist) = @_;
+    return unless defined $playlist;
+    $self->_send_command( qq[rm "$playlist"\n] );
+}
+
+
+
+# -- MPD interaction: searching collection
 
 sub search {
     my ($self, $type, $string, $strict) = @_;
@@ -762,15 +859,13 @@ Commands are then sent to the server as the class's methods are called.
 
 =over 4
 
-=item new( [[$password@]$host], [$port] )
+=item new( [$host] [, $port] [, $password] )
 
-The C<new()> method is the constructor for the C<Audio::MPD> class.
-You may specify a hostname and port - if none is specified then
-the enviroment variables C<MPD_HOST> and C<MPD_PORT> are checked.
-Finally if all else fails the defaults 'localhost' and '6600' are used.
+This is the constructor for Audio::MPD. One can specify a $hostname, a
+$port, and a $password.
 
-An optional  password can be specified by prepending it to the
-hostname, seperated with an '@' character.
+If none is specified then defaults to environment vars MPD_HOST, MPD_PORT
+and MPD_PASSWORD. If those aren't set, defaults to 'localhost', 6600 and ''.
 
 =back
 
@@ -806,56 +901,12 @@ Force mpd to recan its collection. If $path (relative to MPD's music directory)
 is supplied, MPD will only scan it - otherwise, MPD will rescan its whole
 collection.
 
-
-=item $mpd->stats()
-
-Return a hashref with the number of artists, albums, songs in the database,
-as well as mpd uptime, the playtime of the playlist / the database and the
-last update of the database
-
-
-=item $mpd->status()
-
-Return a C<Audio::MPD::Status> object with various information on current
-MPD server settings. Check the embedded pod for more information on the
-available accessors.
-
-
-=item $mpd->send_password( password )
-
-Send a plaintext password to the server,
-which can enable optionally password protected functionality.
-
-
-=item $mpd->get_urlhandlers()
-
-Return an array of supported URL schemes.
-
-
 =back
 
 
-=head2 Changing MPD settings
+=head2 Handling volume & output
 
 =over 4
-
-=item $mpd->repeat( [$repeat] )
-
-Set the repeat mode to $repeat (1 or 0). If $repeat is not specified then
-the repeat mode is toggled.
-
-
-=item $mpd->random( [$random] )
-
-Set the random mode to $random (1 or 0). If $random is not specified then
-the random mode is toggled.
-
-
-=item $mpd->fade( [$seconds] )
-
-Enable crossfading and set the duration of crossfade between songs.
-If $seconds is not specified or $seconds is 0, then crossfading is disabled.
-
 
 =item $mpd->volume( [+][-]$volume )
 
@@ -876,18 +927,70 @@ Disable the specified audio output. $output is the ID of the audio output.
 =back
 
 
+=head2 Retrieving info
+
+=over 4
+
+=item $mpd->stats()
+
+Return a hashref with the number of artists, albums, songs in the database,
+as well as mpd uptime, the playtime of the playlist / the database and the
+last update of the database
+
+
+=item $mpd->status()
+
+Return a C<Audio::MPD::Status> object with various information on current
+MPD server settings. Check the embedded pod for more information on the
+available accessors.
+
+
+=item $mpd->urlhandlers()
+
+Return an array of supported URL schemes.
+
+
+=back
+
+
+=head2 Altering MPD settings
+
+=over 4
+
+=item $mpd->repeat( [$repeat] )
+
+Set the repeat mode to $repeat (1 or 0). If $repeat is not specified then
+the repeat mode is toggled.
+
+
+=item $mpd->random( [$random] )
+
+Set the random mode to $random (1 or 0). If $random is not specified then
+the random mode is toggled.
+
+
+=item $mpd->fade( [$seconds] )
+
+Enable crossfading and set the duration of crossfade between songs.
+If $seconds is not specified or $seconds is 0, then crossfading is disabled.
+
+=back
+
+
 =head2 Controlling playback
 
 =over 4
 
-=item $mpd->play( [$number] )
+=item $mpd->play( [$song] )
 
-Begin playing playlist at song number $number.
+Begin playing playlist at song number $song. If no argument supplied,
+resume playing.
 
 
 =item $mpd->playid( [$songid] )
 
-Begin playing playlist at song ID $songid.
+Begin playing playlist at song ID $songid. If no argument supplied,
+resume playing.
 
 
 =item $mpd->pause( [$state] )
@@ -915,19 +1018,19 @@ Play previous song in playlist.
 
 =item $mpd->seek( $time, [$song])
 
-Seek to $time seconds.
-If $song number is not specified then the perl module will try and
-seek to $time in the current song.
+Seek to $time seconds in song number $song. If $song number is not specified
+then the perl module will try and seek to $time in the current song.
 
 
 =item $mpd->seekid( $time, $songid )
 
-Seek to $time seconds in song ID $songid.
+Seek to $time seconds in song ID $songid. If $song number is not specified
+then the perl module will try and seek to $time in the current song.
 
 =back
 
 
-=head2 Playlist handling
+=head2 Handling playlist
 
 =over 4
 
@@ -970,11 +1073,6 @@ Swap the postions of song ID $songid1 with song ID $songid2 on the current
 playlist. No return value.
 
 
-=item $mpd->shuffle()
-
-Shuffle the current playlist. No return value.
-
-
 =item $mpd->move( $song, $newpos )
 
 Move song number $song to the position $newpos. No return value.
@@ -983,6 +1081,11 @@ Move song number $song to the position $newpos. No return value.
 =item $mpd->moveid( $songid, $newpos )
 
 Move song ID $songid to the position $newpos. No return value.
+
+
+=item $mpd->shuffle()
+
+Shuffle the current playlist. No return value.
 
 
 =item $mpd->load( $playlist )
@@ -1004,7 +1107,7 @@ Delete playlist named $playlist from MPD's playlist directory. No return value.
 =back
 
 
-=head2 Retrieving information from the collection
+=head2 Searching the collection
 
 =over 4
 
