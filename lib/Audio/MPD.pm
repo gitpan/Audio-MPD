@@ -20,6 +20,7 @@ package Audio::MPD;
 use warnings;
 use strict;
 
+use Audio::MPD::Item;
 use Audio::MPD::Status;
 use IO::Socket;
 
@@ -28,7 +29,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _host _password _port version ] );
 
 
-our $VERSION = '0.13.5';
+our $VERSION = '0.14.0';
 
 
 #--
@@ -200,6 +201,19 @@ sub updatedb {
 }
 
 
+#
+# my @handlers = $mpd->urlhandlers;
+#
+# Return an array of supported URL schemes.
+#
+sub urlhandlers {
+    my ($self) = @_;
+    my @handlers =
+        map { /^handler: (.+)$/ ? $1 : () }
+        $self->_send_command("urlhandlers\n");
+    return @handlers;
+}
+
 
 # -- MPD interaction: handling volume & output
 
@@ -244,7 +258,7 @@ sub output_disable {
 
 
 
-# -- MPD interaction: retrieving info
+# -- MPD interaction: retrieving info from current state
 
 #
 # $mpd->stats;
@@ -265,7 +279,7 @@ sub stats {
 #
 # my $status = $mpd->status;
 #
-# Return a Audio::MPD::Status object with various information on current
+# Return an Audio::MPD::Status object with various information on current
 # MPD server settings. Check the embedded pod for more information on the
 # available accessors.
 #
@@ -278,16 +292,101 @@ sub status {
 
 
 #
-# my @handlers = $mpd->urlhandlers;
+# my $list = $mpd->playlist;
 #
-# Return an array of supported URL schemes.
+# Return an arrayref of C<Audio::MPD::Item::Song>s, one for each of the
+# songs in the current playlist.
 #
-sub urlhandlers {
+sub playlist {
     my ($self) = @_;
-    my @handlers =
-        map { /^handler: (.+)$/ ? $1 : () }
-        $self->_send_command("urlhandlers\n");
-    return @handlers;
+
+    my @lines = $self->_send_command("playlistinfo\n");
+    my (@list, %param);
+
+    # parse lines in reverse order since "file:" comes first.
+    # therefore, let's first store every other parameter, and
+    # the "file:" line will trigger the object creation.
+    # of course, since we want to preserve the playlist order,
+    # this means that we're going to unshift the objects.
+    foreach my $line (reverse @lines) {
+        next unless $line =~ /^([^:]+):\s+(.+)$/;
+        $param{$1} = $2;
+        next unless $1 eq 'file'; # last param of this item
+        unshift @list, Audio::MPD::Item->new(%param);
+        %param = ();
+    }
+    return \@list;
+}
+
+
+#
+# my $list = $mpd->pl_changes( $plversion );
+#
+# Return a list with all the songs (as API::Song objects) added to
+# the playlist since playlist $plversion.
+#
+sub pl_changes {
+    my ($self, $plid) = @_;
+
+    my @lines = $self->_send_command("plchanges $plid\n");
+    my (%param, @list);
+
+    # parse lines in reverse order since "file:" comes first.
+    # therefore, let's first store every other parameter, and
+    # the "file:" line will trigger the object creation.
+    # of course, since we want to preserve the playlist order,
+    # this means that we're going to unshift the objects.
+    foreach my $line (reverse @lines) {
+        next unless $line =~ /^([^:]+):\s+(.+)$/;
+        $param{$1} = $2;
+        next unless $1 eq 'file'; # last param of this item
+        unshift @list, Audio::MPD::Item->new(%param);
+        %param = ();
+    }
+    return @list;
+}
+
+
+#
+# my $song = $mpd->current;
+#
+# Return an C<Audio::MPD::Item::Song> representing the song currently playing.
+#
+sub current {
+    my ($self) = @_;
+    my @output = $self->_send_command("currentsong\n");
+    my %params = map { /^([^:]+):\s+(.+)$/ ? ($1=>$2) : () } @output;
+    return Audio::MPD::Item->new( %params );
+}
+
+
+#
+# my $song = $mpd->song( [$song] )
+#
+# Return an C<Audio::MPD::Item::Song> representing the song number C<$song>.
+# If C<$song> is not supplied, returns the current song.
+#
+sub song {
+    my ($self, $song) = @_;
+    return $self->current unless defined $song;
+    my @output = $self->_send_command("playlistinfo $song\n");
+    my %params = map { /^([^:]+):\s+(.+)$/ ? ($1=>$2) : () } @output;
+    return Audio::MPD::Item->new( %params );
+}
+
+
+#
+# my $song = $mpd->songid( [$songid] )
+#
+# Return an C<Audio::MPD::Item::Song> representing the song with id C<$songid>.
+# If C<$songid> is not supplied, returns the current song.
+#
+sub songid {
+    my ($self, $songid) = @_;
+    return $self->current unless defined $songid;
+    my @output = $self->_send_command("playlistid $songid\n");
+    my %params = map { /^([^:]+):\s+(.+)$/ ? ($1=>$2) : () } @output;
+    return Audio::MPD::Item->new( %params );
 }
 
 
@@ -580,28 +679,44 @@ sub rm {
 
 
 
+
+
 # -- MPD interaction: searching collection
 
+#
+# my @songs = $mpd->search( $type, $string, [$strict] );
+#
+# Search through MPD's database of music for matching songs, and return a
+# list of associated Audio::MPD::Item::Song.
+#
+# $type is the field to search in: "title","artist","album", or "filename",
+# and $string is the keyword(s) to seach for. If $strict is true then only
+# exact matches are returned.
+#
 sub search {
     my ($self, $type, $string, $strict) = @_;
 
     my $command = (!defined($strict) || $strict == 0 ? 'search' : 'find');
     my @lines = $self->_send_command( qq[$command $type "$string"\n] );
+    my (@list, %param);
 
-    my @list;
-    my %hash;
-    foreach my $line (@lines) {
-        next unless $line =~ /^([^:]+):\s(.+)$/;
-        if ($1 eq 'file') {
-            push @list, { %hash } if %hash;
-            %hash = ();
-        }
-        $hash{$1} = $2;
+    # parse lines in reverse order since "file:" comes first.
+    # therefore, let's first store every other parameter, and
+    # the "file:" line will trigger the object creation.
+    # of course, since we want to preserve the playlist order,
+    # this means that we're going to unshift the objects.
+    foreach my $line (reverse @lines) {
+        next unless $line =~ /^([^:]+):\s+(.+)$/;
+        $param{$1} = $2;
+        next unless $1 eq 'file'; # last param of this item
+        unshift @list, Audio::MPD::Item->new(%param);
+        %param = ();
     }
-    push @list, { %hash }; # Remember the last entry
     return @list;
 }
 
+
+#
 sub list {
     my ($self, $type, $artist) = @_;
     my $command = "list $type " . $type eq 'album' ? qq["$artist"] : '';
@@ -615,7 +730,7 @@ sub listall {
     my ($self, $path) = @_;
     $path ||= '';
     return $self->_send_command( qq[listall "$path"\n] );
-    # FIXME: return item::songs / item::directory
+# FIXME: return item::songs / item::directory
 }
 
 # recursive, with all tags
@@ -671,32 +786,6 @@ sub lsinfo {
 #   MPD, but may be useful for most people using the module.  #
 ###############################################################
 
-sub get_song_info {
-    my ($self, $song) = @_;
-    $song ||= $self->status->song;
-    return
-        map { /^([^:]+):\s(.+)$/ ? ($1=>$2) : () }
-        $self->_send_command("playlistinfo $song\n");
-    # FIXME: return item::songs / item::directory
-}
-
-sub get_current_song_info {
-    my ($self) = @_;
-    return
-        map { /^([^:]+):\s(.+)$/ ? ($1=>$2) : () }
-        $self->_send_command("currentsong\n");
-    # FIXME: return item::songs / item::directory
-}
-
-sub get_song_info_from_id {
-    my ($self, $song) = @_;
-    $song ||= $self->status->song;
-    return
-        map { /^([^:]+):\s(.+)$/ ? ($1=>$2) : () }
-        $self->_send_command("playlistid $song\n");
-    # FIXME: return item::songs / item::directory
-}
-
 sub searchadd {
     my ($self, $type, $string) = @_;
     my @results = $self->search($type, $string);
@@ -711,35 +800,6 @@ sub searchadd {
 }
 
 
-
-sub playlist {
-    my ($self) = @_;
-
-    my @lines = $self->_send_command("playlistinfo\n");
-
-    my @list;
-    my %hash;
-    foreach my $line (@lines) {
-        next unless $line =~ /^([^:]+):\s(.+)$/;
-        if ($1 eq 'file') {
-            push @list, { %hash } if %hash;
-            %hash = ();
-        }
-        $hash{$1} = $2;
-    }
-    push @list, { %hash }; # Remember the last entry
-    return \@list;
-}
-
-
-sub get_title {
-    my ($self, $song) = @_;
-
-    my %data = $self->get_song_info($song);
-    return $data{Artist}.' - '.$data{Title} if $data{Artist} && $data{Title};
-    return $data{Title} if $data{Title};
-    return $data{file};
-}
 
 sub get_time_format {
     my ($self) = shift;
@@ -797,28 +857,6 @@ sub get_time_info {
     $rv->{time_left} = sprintf("-%d:%02d", $min_left, $sec_left);
 
     return $rv;
-}
-
-
-sub playlist_changes {
-    my ($self, $plid) = @_;
-
-    my %changes;
-
-    my @lines = $self->_send_command("plchanges $plid\n");
-    my $entry; # hash reference
-    foreach my $line (@lines) {
-        next unless $line =~ /^([^:]+):\s(.+)$/;
-        my ($key, $value) = ($1, $2);
-        # create a new hash for the start of each entry
-        $entry = {} if $key eq 'file';
-        # save a ref to the entry as soon as we know where it goes
-        $changes{$value} = $entry if $key eq 'Pos';
-        # save all attributes of the entry
-        $entry->{$key} = $value;
-    }
-
-    return %changes;
 }
 
 
@@ -901,6 +939,12 @@ Force mpd to recan its collection. If $path (relative to MPD's music directory)
 is supplied, MPD will only scan it - otherwise, MPD will rescan its whole
 collection.
 
+
+=item $mpd->urlhandlers()
+
+Return an array of supported URL schemes.
+
+
 =back
 
 
@@ -927,7 +971,7 @@ Disable the specified audio output. $output is the ID of the audio output.
 =back
 
 
-=head2 Retrieving info
+=head2 Retrieving info from current state
 
 =over 4
 
@@ -940,15 +984,38 @@ last update of the database
 
 =item $mpd->status()
 
-Return a C<Audio::MPD::Status> object with various information on current
+Return an C<Audio::MPD::Status> object with various information on current
 MPD server settings. Check the embedded pod for more information on the
 available accessors.
 
 
-=item $mpd->urlhandlers()
+=item $mpd->playlist( )
 
-Return an array of supported URL schemes.
+Return an arrayref of C<Audio::MPD::Item::Song>s, one for each of the
+songs in the current playlist.
 
+
+=item $mpd->pl_changes( $plversion )
+
+Return a list with all the songs (as API::Song objects) added to
+the playlist since playlist $plversion.
+
+
+=item $mpd->current( )
+
+Return an C<Audio::MPD::Item::Song> representing the song currently playing.
+
+
+=item $mpd->song( [$song] )
+
+Return an C<Audio::MPD::Item::Song> representing the song number C<$song>. If
+C<$song> is not supplied, returns the current song.
+
+
+=item $mpd->songid( [$songid] )
+
+Return an C<Audio::MPD::Item::Song> representing the song with id C<$songid>.
+If C<$songid> is not supplied, returns the current song.
 
 =back
 
@@ -1103,102 +1170,12 @@ directory. No return value.
 
 Delete playlist named $playlist from MPD's playlist directory. No return value.
 
-
-=back
-
-
-=head2 Searching the collection
-
-=over 4
-
-=item $mpd->search( $type, $string, [$strict] )
-
-Search through MPD's database of music for matching songs.
-
-$type is the field to search in: "title","artist","album", or "filename", and
-$string is the keyword(s) to seach for. If $strict is true then only exact
-matches are returned.
-
-Return an array of matching file paths.
-
-
-=item $mpd->searchadd( $type, $string )
-
-Perform the same action as $mpd->search(), but add any
-matching songs to the current playlist, instead of just returning
-information about them.
-
-
-=item $mpd->list( $type, [$artist] )
-
-Returns an array of all the "album" or "artist" in
-the music database (as chosen by $type). $artist is an
-optional parameter, which will only return albums by the
-specified $artist when $type is "album".
-
-
-=item $mpd->listall( [$path] )
-
-Return an array of all the songs in the music database.
-If $path is specified, then it only returns songs matching
-the directory/path.
-
-
-=item $mpd->listallinfo( [$path] )
-
-Returns an array of hashes containing all the paths and metadata about
-songs in the music database.  If $path is specified, then it only
-returns songs matching the directory/path.
-
-
-=item $mpd->lsinfo( [$directory] )
-
-Returns an array of hashes containing all the paths and metadata about
-songs in the specified directory. If no directory is specified, then only
-the songs/directories in the root directory are listed.
-
 =back
 
 
 =head2 Retrieving information from current playlist
 
 =over 4
-
-=item $mpd->get_current_song_info( )
-
-Return a hash of metadata for the song currently playing.
-
-
-=item $mpd->playlist( )
-
-Return an arrayref containing a hashref of metadata for each of the
-songs in the current playlist.
-
-
-=item $mpd->playlist_changes( $plversion )
-
-Return a hash of hashref with all the differences in the playlist since
-playlist $plversion.
-
-
-=item $mpd->get_song_info( $song )
-
-Returns an a hash containing information about song number $song.
-
-
-=item $mpd->get_song_info_from_id( $songid )
-
-Returns an a hash containing information about song ID $songid.
-
-
-=item $mpd->get_title( [$song] )
-
-Return the 'title string' of song number $song. The 'title' is the artist and
-title of the song. If the artist isn't available, then just the title is
-returned. If there is no title available, then the filename is returned.
-
-If $song is not specified, then the 'title' of the current song is returned.
-
 
 =item $mpd->get_time_format( )
 
@@ -1235,6 +1212,58 @@ contained in a hashref with the following keys:
 =item time_left
 
 =back
+
+=back
+
+
+=head2 Searching the collection
+
+=over 4
+
+=item $mpd->search( $type, $string, [$strict] )
+
+Search through MPD's database of music for matching songs, and return a
+list of associated Audio::MPD::Item::Song.
+
+$type is the field to search in: "title","artist","album", or "filename", and
+$string is the keyword(s) to seach for. If $strict is true then only exact
+matches are returned.
+
+
+=item $mpd->searchadd( $type, $string )
+
+Perform the same action as $mpd->search(), but add any
+matching songs to the current playlist, instead of just returning
+information about them.
+
+
+=item $mpd->list( $type, [$artist] )
+
+Returns an array of all the "album" or "artist" in
+the music database (as chosen by $type). $artist is an
+optional parameter, which will only return albums by the
+specified $artist when $type is "album".
+
+
+=item $mpd->listall( [$path] )
+
+Return an array of all the songs in the music database.
+If $path is specified, then it only returns songs matching
+the directory/path.
+
+
+=item $mpd->listallinfo( [$path] )
+
+Returns an array of hashes containing all the paths and metadata about
+songs in the music database.  If $path is specified, then it only
+returns songs matching the directory/path.
+
+
+=item $mpd->lsinfo( [$directory] )
+
+Returns an array of hashes containing all the paths and metadata about
+songs in the specified directory. If no directory is specified, then only
+the songs/directories in the root directory are listed.
 
 =back
 

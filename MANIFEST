@@ -3,6 +3,9 @@ Build.PL
 Changelog
 COPYING
 lib/Audio/MPD.pm
+lib/Audio/MPD/Item.pm
+lib/Audio/MPD/Item/Directory.pm
+lib/Audio/MPD/Item/Song.pm
 lib/Audio/MPD/Status.pm
 lib/Audio/MPD/Test.pm
 Makefile.PL
@@ -12,9 +15,10 @@ README
 scripts/example.pl
 scripts/mpc.pl
 t/00-use.t
-t/01-pod-coverage.t
 t/01-pod.t
+t/02-pod-coverage.t
 t/10-status.t
+t/11-item.t
 t/20-connection.t
 t/21-new.t
 t/22-general.t

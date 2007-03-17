@@ -29,9 +29,9 @@ use Test::More;
 eval 'use Audio::MPD::Test';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
-plan tests => 10;
+plan tests => 24;
 my $mpd = Audio::MPD->new;
-
+my $song;
 
 #
 # testing stats
@@ -58,9 +58,44 @@ isa_ok( $status, 'Audio::MPD::Status', 'status return an Audio::MPD::Status obje
 
 
 #
-# testing urlhandlers.
-my @handlers = $mpd->urlhandlers;
-is( scalar @handlers,     1, 'only one url handler supported' );
-is( $handlers[0], 'http://', 'only http is supported by now' );
+# testing current song.
+$song = $mpd->current;
+isa_ok( $song, 'Audio::MPD::Item::Song', 'current return an Audio::MPD::Item::Song object' );
+
+
+#
+# testing playlist retrieval.
+my $list = $mpd->playlist;
+isa_ok( $list, 'ARRAY', 'playlist returns an array reference' );
+isa_ok( $_, 'Audio::MPD::Item::Song', 'playlist returns Audio::MPD::Item::Song objects' )
+    for @$list;
+is( $list->[0]->title, 'ok-title', 'first song reported first' );
+
+
+#
+# testing playlist changes retrieval.
+my @list = $mpd->pl_changes(0);
+isa_ok( $_, 'Audio::MPD::Item::Song', 'pl_changes() returns Audio::MPD::Item::Song objects' )
+    for @$list;
+is( $list->[0]->title, 'ok-title', 'first song reported first' );
+
+
+#
+# testing song.
+$song = $mpd->song(1);
+isa_ok( $song, 'Audio::MPD::Item::Song', 'song() returns an Audio::MPD::Item::Song object' );
+is( $song->file, 'dir1/title-artist-album.ogg', 'song() returns the wanted song' );
+$song = $mpd->song; # default to current song
+is( $song->file, 'title.ogg', 'song() defaults to current song' );
+
+
+#
+# testing songid.
+$song = $mpd->songid(1);
+isa_ok( $song, 'Audio::MPD::Item::Song', 'songid() returns an Audio::MPD::Item::Song object' );
+is( $song->file, 'dir1/title-artist-album.ogg', 'songid() returns the wanted song' );
+$song = $mpd->songid; # default to current song
+is( $song->file, 'title.ogg', 'songid() defaults to current song' );
+
 
 exit;
