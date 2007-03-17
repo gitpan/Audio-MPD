@@ -20,16 +20,17 @@ package Audio::MPD;
 use warnings;
 use strict;
 
+use Audio::MPD::Collection;
 use Audio::MPD::Item;
 use Audio::MPD::Status;
 use IO::Socket;
 
 
 use base qw[ Class::Accessor::Fast ];
-__PACKAGE__->mk_accessors( qw[ _host _password _port version ] );
+__PACKAGE__->mk_accessors( qw[ _host _password _port collection version ] );
 
 
-our $VERSION = '0.14.0';
+our $VERSION = '0.15.0';
 
 
 #--
@@ -59,6 +60,9 @@ sub new {
         _password => $password,
     };
     bless $self, $class;
+
+    # create the collection object and store it.
+    $self->collection( Audio::MPD::Collection->new($self) );
 
     # try to issue a ping to test connection - this can die.
     $self->ping;
@@ -679,126 +683,12 @@ sub rm {
 
 
 
-
-
-# -- MPD interaction: searching collection
-
-#
-# my @songs = $mpd->search( $type, $string, [$strict] );
-#
-# Search through MPD's database of music for matching songs, and return a
-# list of associated Audio::MPD::Item::Song.
-#
-# $type is the field to search in: "title","artist","album", or "filename",
-# and $string is the keyword(s) to seach for. If $strict is true then only
-# exact matches are returned.
-#
-sub search {
-    my ($self, $type, $string, $strict) = @_;
-
-    my $command = (!defined($strict) || $strict == 0 ? 'search' : 'find');
-    my @lines = $self->_send_command( qq[$command $type "$string"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
-}
-
-
-#
-sub list {
-    my ($self, $type, $artist) = @_;
-    my $command = "list $type " . $type eq 'album' ? qq["$artist"] : '';
-    return
-        map { /^[^:]+:\s+(.*)$/ ? $1 : () }
-        $self->_send_command( "$command\n" );
-}
-
-# recursively, but only dirs & files
-sub listall {
-    my ($self, $path) = @_;
-    $path ||= '';
-    return $self->_send_command( qq[listall "$path"\n] );
-# FIXME: return item::songs / item::directory
-}
-
-# recursive, with all tags
-sub listallinfo {
-    my ($self, $path) = @_;
-    $path ||= '';
-    my @lines = $self->_send_command( qq[listallinfo "$path"\n] );
-
-    my @results;
-    my %element;
-    foreach my $line (@lines) {
-        chomp $line;
-        next unless $line =~ /^([^:]+):\s(.+)$/;
-        if ($1 eq 'file') {
-            push @results, { %element } if %element;
-            %element = ();
-        }
-        $element{$1} = $2;
-    }
-    push @results, { %element };
-    return @results;
-    # FIXME: return item::songs / item::directory
-}
-
-# only in the current path, all tags
-sub lsinfo {
-    my ($self, $path) = @_;
-    $path ||= '';
-
-    my @lines = $self->_send_command( qq[lsinfo "$path"\n] );
-
-    my @results;
-    my %element;
-    foreach my $line (@lines) {
-        chomp $line;
-        next unless $line =~ /^([^:]+):\s(.+)$/;
-        if ($1 eq 'file' || $1 eq 'playlist' || $1 eq 'directory') {
-            push @results, { %element } if %element;
-            %element = ();
-        }
-        $element{$1} = $2;
-    }
-    push @results, { %element };
-    return @results;
-    # FIXME: return item::songs / item::directory
-}
-
-
 ###############################################################
 #                     CUSTOM METHODS                          #
 #-------------------------------------------------------------#
 #   This section contains all methods not directly accessing  #
 #   MPD, but may be useful for most people using the module.  #
 ###############################################################
-
-sub searchadd {
-    my ($self, $type, $string) = @_;
-    my @results = $self->search($type, $string);
-
-    return unless @results;
-
-    my $command =
-          "command_list_begin\n"
-        . join( '', map { qq[add "$_->{file}"\n] } @results )
-        . "command_list_end\n";
-    $self->_send_command( $command );
-}
-
 
 
 sub get_time_format {
@@ -1218,54 +1108,13 @@ contained in a hashref with the following keys:
 
 =head2 Searching the collection
 
-=over 4
+To search the collection, use the C<collection()> accessor, returning the
+associated C<Audio::MPD::Collection> object. You will then be able to call:
 
-=item $mpd->search( $type, $string, [$strict] )
+    $mpd->collection->random_song();
 
-Search through MPD's database of music for matching songs, and return a
-list of associated Audio::MPD::Item::Song.
-
-$type is the field to search in: "title","artist","album", or "filename", and
-$string is the keyword(s) to seach for. If $strict is true then only exact
-matches are returned.
-
-
-=item $mpd->searchadd( $type, $string )
-
-Perform the same action as $mpd->search(), but add any
-matching songs to the current playlist, instead of just returning
-information about them.
-
-
-=item $mpd->list( $type, [$artist] )
-
-Returns an array of all the "album" or "artist" in
-the music database (as chosen by $type). $artist is an
-optional parameter, which will only return albums by the
-specified $artist when $type is "album".
-
-
-=item $mpd->listall( [$path] )
-
-Return an array of all the songs in the music database.
-If $path is specified, then it only returns songs matching
-the directory/path.
-
-
-=item $mpd->listallinfo( [$path] )
-
-Returns an array of hashes containing all the paths and metadata about
-songs in the music database.  If $path is specified, then it only
-returns songs matching the directory/path.
-
-
-=item $mpd->lsinfo( [$directory] )
-
-Returns an array of hashes containing all the paths and metadata about
-songs in the specified directory. If no directory is specified, then only
-the songs/directories in the root directory are listed.
-
-=back
+See C<Audio::MPD::Collection> documentation for more details on available
+methods.
 
 
 =head1 SEE ALSO
