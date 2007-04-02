@@ -30,7 +30,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _host _password _port collection version ] );
 
 
-our $VERSION = '0.16.0';
+our $VERSION = '0.16.1';
 
 
 #--
@@ -140,6 +140,54 @@ sub _send_command {
 }
 
 
+#
+# my @items = $mpd->_cooked_command_as_items( $command );
+#
+# Lots of Audio::MPD methods are using _send_command() and then parse the
+# output as a collection of Audio::MPD::Item. This method is meant to
+# factorize this code, and will parse the raw output of _send_command() in
+# a cooked list of items.
+#
+sub _cooked_command_as_items {
+    my ($self, $command) = @_;
+
+    my @lines = $self->_send_command($command);
+    my (@items, %param);
+
+    # parse lines in reverse order since "file:" or "directory:" lines
+    # come first. therefore, let's first store every other parameter,
+    # and the last line will trigger the object creation.
+    # of course, since we want to preserve the playlist order, this means
+    # that we're going to unshift the objects instead of push.
+    foreach my $line (reverse @lines) {
+        my ($k,$v) = split /:\s+/, $line, 2;
+        $param{$k} = $v;
+        next unless $k eq 'file' || $k eq 'directory'; # last param of item
+        unshift @items, Audio::MPD::Item->new(%param);
+        %param = ();
+    }
+
+    return @items;
+}
+
+
+#
+# my @list = $mpd->_cooked_command_strip_first_field( $command );
+#
+# Lots of Audio::MPD methods are using _send_command() and then parse the
+# output to remove the first field (with the colon ":" acting as separator).
+# This method is meant to factorize this code, and will parse the raw output
+# of _send_command() in a cooked list of strings.
+#
+sub _cooked_command_strip_first_field {
+    my ($self, $command) = @_;
+
+    my @list =
+        map { ( split(/:\s+/, $_, 2) )[1] }
+        $self->_send_command($command);
+    return @list;
+}
+
 
 #--
 # Public methods
@@ -212,10 +260,7 @@ sub updatedb {
 #
 sub urlhandlers {
     my ($self) = @_;
-    my @handlers =
-        map { /^handler: (.+)$/ ? $1 : () }
-        $self->_send_command("urlhandlers\n");
-    return @handlers;
+    return $self->_cooked_command_strip_first_field("urlhandlers\n");
 }
 
 
@@ -274,7 +319,7 @@ sub output_disable {
 sub stats {
     my ($self) = @_;
     my %kv =
-        map { /^([^:]+):\s+(\S+)$/ ? ($1 => $2) : () }
+        map { my ($k,$v) = split(/:\s+/, $_, 2); ($k => $v) }
         $self->_send_command( "stats\n" );
     return \%kv;
 }
@@ -304,21 +349,7 @@ sub status {
 sub playlist {
     my ($self) = @_;
 
-    my @lines = $self->_send_command("playlistinfo\n");
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
+    my @list = $self->_cooked_command_as_items("playlistinfo\n");
     return \@list;
 }
 
@@ -332,22 +363,7 @@ sub playlist {
 sub pl_changes {
     my ($self, $plid) = @_;
 
-    my @lines = $self->_send_command("plchanges $plid\n");
-    my (%param, @list);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_cooked_command_as_items("plchanges $plid\n");
 }
 
 
@@ -358,9 +374,8 @@ sub pl_changes {
 #
 sub current {
     my ($self) = @_;
-    my @output = $self->_send_command("currentsong\n");
-    my %params = map { /^([^:]+):\s+(.+)$/ ? ($1=>$2) : () } @output;
-    return Audio::MPD::Item->new( %params );
+    my ($item) = $self->_cooked_command_as_items("currentsong\n");
+    return $item;
 }
 
 
@@ -373,9 +388,8 @@ sub current {
 sub song {
     my ($self, $song) = @_;
     return $self->current unless defined $song;
-    my @output = $self->_send_command("playlistinfo $song\n");
-    my %params = map { /^([^:]+):\s+(.+)$/ ? ($1=>$2) : () } @output;
-    return Audio::MPD::Item->new( %params );
+    my ($item) = $self->_cooked_command_as_items("playlistinfo $song\n");
+    return $item;
 }
 
 
@@ -388,9 +402,8 @@ sub song {
 sub songid {
     my ($self, $songid) = @_;
     return $self->current unless defined $songid;
-    my @output = $self->_send_command("playlistid $songid\n");
-    my %params = map { /^([^:]+):\s+(.+)$/ ? ($1=>$2) : () } @output;
-    return Audio::MPD::Item->new( %params );
+    my ($item) = $self->_cooked_command_as_items("playlistid $songid\n");
+    return $item;
 }
 
 

@@ -27,7 +27,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _mpd ] );
 
 
-#our ($VERSION) = '$Rev: 5745 $' =~ /(\d+)/;
+#our ($VERSION) = '$Rev: 5805 $' =~ /(\d+)/;
 
 
 #--
@@ -72,22 +72,7 @@ sub all_items {
     my ($self, $path) = @_;
     $path ||= '';
 
-    my @lines = $self->_mpd->_send_command( qq[listallinfo "$path"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file' || $1 eq 'directory'; # last param of item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[listallinfo "$path"\n] );
 }
 
 
@@ -108,22 +93,7 @@ sub all_items_simple {
     my ($self, $path) = @_;
     $path ||= '';
 
-    my @lines = $self->_mpd->_send_command( qq[listall "$path"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file' || $1 eq 'directory'; # last param of item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[listall "$path"\n] );
 }
 
 
@@ -139,22 +109,7 @@ sub items_in_dir {
     my ($self, $path) = @_;
     $path ||= '';
 
-    my @lines = $self->_mpd->_send_command( qq[lsinfo "$path"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file' || $1 eq 'directory'; # last param of item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[lsinfo "$path"\n] );
 }
 
 
@@ -168,9 +123,7 @@ sub items_in_dir {
 #
 sub all_albums {
     my ($self) = @_;
-    return
-        map { /^Album: (.+)$/ ? $1 : () }
-        $self->_mpd->_send_command( "list album\n" );
+    return $self->_mpd->_cooked_command_strip_first_field( "list album\n" );
 }
 
 
@@ -181,9 +134,7 @@ sub all_albums {
 #
 sub all_artists {
     my ($self) = @_;
-    return
-        map { /^Artist: (.+)$/ ? $1 : () }
-        $self->_mpd->_send_command( "list artist\n" );
+    return $self->_mpd->_cooked_command_strip_first_field( "list artist\n" );
 }
 
 
@@ -194,9 +145,7 @@ sub all_artists {
 #
 sub all_titles {
     my ($self) = @_;
-    return
-        map { /^Title: (.+)$/ ? $1 : () }
-        $self->_mpd->_send_command( "list title\n" );
+    return $self->_mpd->_cooked_command_strip_first_field( "list title\n" );
 }
 
 
@@ -207,9 +156,7 @@ sub all_titles {
 #
 sub all_pathes {
     my ($self) = @_;
-    return
-        map { /^file: (.+)$/ ? $1 : () }
-        $self->_mpd->_send_command( "list filename\n" );
+    return $self->_mpd->_cooked_command_strip_first_field( "list filename\n" );
 }
 
 
@@ -223,20 +170,8 @@ sub all_pathes {
 sub song {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[find filename "$what"\n] );
-    my %param;
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        return Audio::MPD::Item->new(%param);
-    }
+    my ($item) = $self->_mpd->_cooked_command_as_items( qq[find filename "$what"\n] );
+    return $item;
 }
 
 
@@ -248,21 +183,7 @@ sub song {
 sub songs_with_filename_partial {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[search filename "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        push @list, Audio::MPD::Item->new(%param);
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[search filename "$what"\n] );
 }
 
 
@@ -276,9 +197,7 @@ sub songs_with_filename_partial {
 #
 sub albums_by_artist {
     my ($self, $artist) = @_;
-    return
-        map { /^Album: (.+)$/ ? $1 : () }
-        $self->_mpd->_send_command( qq[list album "$artist"\n] );
+    return $self->_mpd->_cooked_command_strip_first_field( qq[list album "$artist"\n] );
 }
 
 
@@ -290,22 +209,7 @@ sub albums_by_artist {
 sub songs_by_artist {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[find artist "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[find artist "$what"\n] );
 }
 
 
@@ -318,22 +222,7 @@ sub songs_by_artist {
 sub songs_by_artist_partial {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[search artist "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[search artist "$what"\n] );
 }
 
 
@@ -345,22 +234,7 @@ sub songs_by_artist_partial {
 sub songs_from_album {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[find album "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[find album "$what"\n] );
 }
 
 
@@ -372,22 +246,7 @@ sub songs_from_album {
 sub songs_from_album_partial {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[search album "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[search album "$what"\n] );
 }
 
 
@@ -399,22 +258,7 @@ sub songs_from_album_partial {
 sub songs_with_title {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[find title "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[find title "$what"\n] );
 }
 
 
@@ -426,22 +270,7 @@ sub songs_with_title {
 sub songs_with_title_partial {
     my ($self, $what) = @_;
 
-    my @lines = $self->_mpd->_send_command( qq[search title "$what"\n] );
-    my (@list, %param);
-
-    # parse lines in reverse order since "file:" comes first.
-    # therefore, let's first store every other parameter, and
-    # the "file:" line will trigger the object creation.
-    # of course, since we want to preserve the playlist order,
-    # this means that we're going to unshift the objects.
-    foreach my $line (reverse @lines) {
-        next unless $line =~ /^([^:]+):\s+(.+)$/;
-        $param{$1} = $2;
-        next unless $1 eq 'file'; # last param of this item
-        unshift @list, Audio::MPD::Item->new(%param);
-        %param = ();
-    }
-    return @list;
+    return $self->_mpd->_cooked_command_as_items( qq[search title "$what"\n] );
 }
 
 
