@@ -23,6 +23,7 @@ use strict;
 use Audio::MPD::Collection;
 use Audio::MPD::Item;
 use Audio::MPD::Status;
+use Encode;
 use IO::Socket;
 
 
@@ -30,7 +31,7 @@ use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _host _password _port collection version ] );
 
 
-our $VERSION = '0.16.1';
+our $VERSION = '0.16.2';
 
 
 #--
@@ -118,19 +119,19 @@ sub _send_command {
 
     # send password.
     if ( $self->_password ) {
-        $socket->print( 'password ' . $self->_password . "\n" );
+        $socket->print( 'password ' . encode('utf-8', $self->_password) . "\n" );
         $line = $socket->getline;
         die $line if $line =~ s/^ACK //;
     }
 
     # ok, now we're connected - let's issue the command.
-    $socket->print( $command );
+    $socket->print( encode('utf-8', $command) );
     my @output;
     while (defined ( $line = $socket->getline ) ) {
         chomp $line;
         die $line if $line =~ s/^ACK //; # oops - error.
         last if $line =~ /^OK/;          # end of output.
-        push @output, $line;
+        push @output, decode('utf-8', $line);
     }
 
     # close the socket.
