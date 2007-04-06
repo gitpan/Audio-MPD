@@ -29,16 +29,16 @@ use Test::More;
 eval 'use Audio::MPD::Test';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
-plan tests => 24;
+plan tests => 15;
 my $mpd = Audio::MPD->new;
 my $song;
 
 #
 # testing stats
 $mpd->updatedb;
-$mpd->add( 'title.ogg' );
-$mpd->add( 'dir1/title-artist-album.ogg' );
-$mpd->add( 'dir1/title-artist.ogg' );
+$mpd->playlist->add( 'title.ogg' );
+$mpd->playlist->add( 'dir1/title-artist-album.ogg' );
+$mpd->playlist->add( 'dir1/title-artist.ogg' );
 my $stats = $mpd->stats;
 is( $stats->{artists},      1, 'one artist in the database' );
 is( $stats->{albums},       1, 'one album in the database' );
@@ -61,23 +61,6 @@ isa_ok( $status, 'Audio::MPD::Status', 'status return an Audio::MPD::Status obje
 # testing current song.
 $song = $mpd->current;
 isa_ok( $song, 'Audio::MPD::Item::Song', 'current return an Audio::MPD::Item::Song object' );
-
-
-#
-# testing playlist retrieval.
-my $list = $mpd->playlist;
-isa_ok( $list, 'ARRAY', 'playlist returns an array reference' );
-isa_ok( $_, 'Audio::MPD::Item::Song', 'playlist returns Audio::MPD::Item::Song objects' )
-    for @$list;
-is( $list->[0]->title, 'ok-title', 'first song reported first' );
-
-
-#
-# testing playlist changes retrieval.
-my @list = $mpd->pl_changes(0);
-isa_ok( $_, 'Audio::MPD::Item::Song', 'pl_changes() returns Audio::MPD::Item::Song objects' )
-    for @$list;
-is( $list->[0]->title, 'ok-title', 'first song reported first' );
 
 
 #
