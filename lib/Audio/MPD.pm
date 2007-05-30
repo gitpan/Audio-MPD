@@ -1,17 +1,9 @@
 #
+# This file is part of Audio::MPD
+# Copyright (c) 2007 Jerome Quelin, all rights reserved.
+#
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# it under the same terms as Perl itself.
 #
 #
 
@@ -21,10 +13,10 @@ use warnings;
 use strict;
 
 use Audio::MPD::Collection;
-use Audio::MPD::Item;
+use Audio::MPD::Common::Item;
+use Audio::MPD::Common::Stats;
+use Audio::MPD::Common::Status;
 use Audio::MPD::Playlist;
-use Audio::MPD::Stats;
-use Audio::MPD::Status;
 use Encode;
 use IO::Socket;
 
@@ -35,7 +27,7 @@ __PACKAGE__->mk_accessors(
         collection playlist version ] );
 
 
-our $VERSION = '0.17.2';
+our $VERSION = '0.18.0';
 
 
 #--
@@ -150,9 +142,9 @@ sub _send_command {
 # my @items = $mpd->_cooked_command_as_items( $command );
 #
 # Lots of Audio::MPD methods are using _send_command() and then parse the
-# output as a collection of Audio::MPD::Item. This method is meant to
-# factorize this code, and will parse the raw output of _send_command() in
-# a cooked list of items.
+# output as a collection of AMC::Item. This method is meant to factorize
+# this code, and will parse the raw output of _send_command() in a cooked
+# list of items.
 #
 sub _cooked_command_as_items {
     my ($self, $command) = @_;
@@ -169,7 +161,7 @@ sub _cooked_command_as_items {
         my ($k,$v) = split /:\s+/, $line, 2;
         $param{$k} = $v;
         next unless $k eq 'file' || $k eq 'directory'; # last param of item
-        unshift @items, Audio::MPD::Item->new(%param);
+        unshift @items, Audio::MPD::Common::Item->new(%param);
         %param = ();
     }
 
@@ -264,7 +256,7 @@ sub password {
 #
 # $mpd->updatedb( [$path] );
 #
-# Force mpd to recan its collection. If $path (relative to MPD's music
+# Force mpd to rescan its collection. If $path (relative to MPD's music
 # directory) is supplied, MPD will only scan it - otherwise, MPD will rescan
 # its whole collection.
 #
@@ -334,26 +326,26 @@ sub output_disable {
 #
 # $mpd->stats;
 #
-# Return an Audio::MPD::Stats object with the current statistics of MPD.
+# Return an AMC::Stats object with the current statistics of MPD.
 #
 sub stats {
     my ($self) = @_;
     my %kv = $self->_cooked_command_as_kv( "stats\n" );
-    return Audio::MPD::Stats->new(%kv);
+    return Audio::MPD::Common::Stats->new(\%kv);
 }
 
 
 #
 # my $status = $mpd->status;
 #
-# Return an Audio::MPD::Status object with various information on current
+# Return an AMC::Status object with various information on current
 # MPD server settings. Check the embedded pod for more information on the
 # available accessors.
 #
 sub status {
     my ($self) = @_;
     my %kv = $self->_cooked_command_as_kv( "status\n" );
-    my $status = Audio::MPD::Status->new( %kv );
+    my $status = Audio::MPD::Common::Status->new( \%kv );
     return $status;
 }
 
@@ -361,7 +353,7 @@ sub status {
 #
 # my $song = $mpd->current;
 #
-# Return an C<Audio::MPD::Item::Song> representing the song currently playing.
+# Return an AMC::Item::Song representing the song currently playing.
 #
 sub current {
     my ($self) = @_;
@@ -373,8 +365,8 @@ sub current {
 #
 # my $song = $mpd->song( [$song] )
 #
-# Return an C<Audio::MPD::Item::Song> representing the song number C<$song>.
-# If C<$song> is not supplied, returns the current song.
+# Return an AMC::Item::Song representing the song number $song.
+# If $song is not supplied, returns the current song.
 #
 sub song {
     my ($self, $song) = @_;
@@ -387,8 +379,8 @@ sub song {
 #
 # my $song = $mpd->songid( [$songid] )
 #
-# Return an C<Audio::MPD::Item::Song> representing the song with id C<$songid>.
-# If C<$songid> is not supplied, returns the current song.
+# Return an AMC::Item::Song representing the song with id $songid.
+# If $songid is not supplied, returns the current song.
 #
 sub songid {
     my ($self, $songid) = @_;
@@ -520,7 +512,7 @@ sub prev {
 
 
 #
-# $mpd->seek( $time, [$song]);
+# $mpd->seek( $time, [$song] );
 #
 # Seek to $time seconds in song number $song. If $song number is not specified
 # then the perl module will try and seek to $time in the current song.
@@ -534,9 +526,9 @@ sub seek {
 
 
 #
-# $mpd->seekid( $time, $songid );
+# $mpd->seekid( $time, [$songid] );
 #
-# Seek to $time seconds in song ID $songid. If $song number is not specified
+# Seek to $time seconds in song ID $songid. If $songid number is not specified
 # then the perl module will try and seek to $time in the current song.
 #
 sub seekid {
@@ -664,32 +656,33 @@ Disable the specified audio output. $output is the ID of the audio output.
 
 =item $mpd->stats()
 
-Return an C<Audio::MPD::Stats> object with the current statistics of MPD.
-See the associated pod for more information.
+Return an C<Audio::MPD::Common::Stats> object with the current statistics
+of MPD. See the associated pod for more information.
 
 
 =item $mpd->status()
 
-Return an C<Audio::MPD::Status> object with various information on current
-MPD server settings. Check the embedded pod for more information on the
-available accessors.
+Return an C<Audio::MPD::Common::Status> object with various information on
+current MPD server settings. Check the embedded pod for more information on
+the available accessors.
 
 
 =item $mpd->current()
 
-Return an C<Audio::MPD::Item::Song> representing the song currently playing.
+Return an C<Audio::MPD::Common::Item::Song> representing the song currently
+playing.
 
 
 =item $mpd->song( [$song] )
 
-Return an C<Audio::MPD::Item::Song> representing the song number C<$song>. If
-C<$song> is not supplied, returns the current song.
+Return an C<Audio::MPD::Common::Item::Song> representing the song number
+C<$song>. If C<$song> is not supplied, returns the current song.
 
 
 =item $mpd->songid( [$songid] )
 
-Return an C<Audio::MPD::Item::Song> representing the song with id C<$songid>.
-If C<$songid> is not supplied, returns the current song.
+Return an C<Audio::MPD::Common::Item::Song> representing the song with id
+C<$songid>. If C<$songid> is not supplied, returns the current song.
 
 =back
 
@@ -806,34 +799,21 @@ to join us. (use L<http://groups.google.com/group/audio-mpd> to sign in). Our
 subversion repository is located at L<https://svn.musicpd.org>.
 
 
+=head1 AUTHOR
 
-=head1 AUTHORS
+Jerome Quelin, C<< <jquelin at cpan.org> >>
 
-Jerome Quelin <jquelin@cpan.org>
-
-Original code by Tue Abrahamsen <tue.abrahamsen@gmail.com>, documented by
-Nicholas J. Humfrey <njh@aelius.com>.
-
+Original code by Tue Abrahamsen C<< <tue.abrahamsen at gmail.com> >>,
+documented by Nicholas J. Humfrey C<< <njh at aelius.com> >>.
 
 
-=head1 COPYRIGHT AND LICENSE
+=head1 COPYRIGHT & LICENSE
 
-Copyright (c) 2005 Tue Abrahamsen <tue.abrahamsen@gmail.com>
-
-Copyright (c) 2006 Nicholas J. Humfrey <njh@aelius.com>
-
-Copyright (c) 2007 Jerome Quelin <jquelin@cpan.org>
-
+Copyright (c) 2005 Tue Abrahamsen, all rights reserved.
+Copyright (c) 2006 Nicolas J. Humfrey, all rights reserved.
+Copyright (c) 2007 Jerome Quelin, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+it under the same terms as Perl itself.
 
 =cut
-

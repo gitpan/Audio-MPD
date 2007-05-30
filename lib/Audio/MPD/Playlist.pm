@@ -1,17 +1,9 @@
 #
+# This file is part of Audio::MPD
+# Copyright (c) 2007 Jerome Quelin, all rights reserved.
+#
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# it under the same terms as Perl itself.
 #
 #
 
@@ -60,7 +52,7 @@ sub new {
 #
 # my @items = $pl->as_items;
 #
-# Return an array of C<Audio::MPD::Item::Song>s, one for each of the
+# Return an array of AMC::Item::Songs, one for each of the
 # songs in the current playlist.
 #
 sub as_items {
@@ -304,13 +296,13 @@ of an C<Audio::MPD> object.
 
 =item $pl->as_items()
 
-Return an array of C<Audio::MPD::Item::Song>s, one for each of the
+Return an array of C<Audio::MPD::Common::Item::Song>s, one for each of the
 songs in the current playlist.
 
 
 =item $pl->items_changed_since( $plversion )
 
-Return a list with all the songs (as API::Song objects) added to
+Return a list with all the songs (as AMC::Item::Song objects) added to
 the playlist since playlist $plversion.
 
 
@@ -413,35 +405,19 @@ return value.
 
 =head1 SEE ALSO
 
-You can find more information on the mpd project on its homepage at
-L<http://www.musicpd.org>, or its wiki L<http://mpd.wikia.com>.
-
-Regarding this Perl module, you can report bugs on CPAN via
-L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Audio-MPD>.
-
-Audio::MPD development takes place on <audio-mpd@googlegroups.com>: feel free
-to join us. (use L<http://groups.google.com/group/audio-mpd> to sign in). Our
-subversion repository is located at L<https://svn.musicpd.org>.
+L<Audio::MPD>
 
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Jerome Quelin <jquelin@cpan.org>
+Jerome Quelin, C<< <jquelin at cpan.org> >>
 
 
-=head1 COPYRIGHT AND LICENSE
+=head1 COPYRIGHT & LICENSE
 
-Copyright (c) 2007 Jerome Quelin <jquelin@cpan.org>
-
+Copyright (c) 2007 Jerome Quelin, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+it under the same terms as Perl itself.
 
 =cut

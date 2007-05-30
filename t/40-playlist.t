@@ -1,21 +1,10 @@
 #!perl
 #
-# This file is part of Audio::MPD.
-# Copyright (c) 2007 Jerome Quelin <jquelin@cpan.org>
+# This file is part of Audio::MPD
+# Copyright (c) 2007 Jerome Quelin, all rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or (at
-# your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# it under the same terms as Perl itself.
 #
 #
 
@@ -49,16 +38,16 @@ $pl->add( 'title.ogg' );
 $pl->add( 'dir1/title-artist-album.ogg' );
 $pl->add( 'dir1/title-artist.ogg' );
 @items = $pl->as_items;
-isa_ok( $_, 'Audio::MPD::Item::Song',
-        'as_items() returns Audio::MPD::Item::Song objects' ) for @items;
+isa_ok( $_, 'Audio::MPD::Common::Item::Song',
+        'as_items() returns AMC::Item::Song objects' ) for @items;
 is( $items[0]->title, 'ok-title', 'first song reported first' );
 
 
 #
 # testing playlist changes retrieval.
 @items = $pl->items_changed_since(0);
-isa_ok( $_, 'Audio::MPD::Item::Song',
-        'items_changed_since() returns Audio::MPD::Item::Song objects' )
+isa_ok( $_, 'Audio::MPD::Common::Item::Song',
+        'items_changed_since() returns AMC::Item::Song objects' )
     for @items;
 is( $items[0]->title, 'ok-title', 'first song reported first' );
 
