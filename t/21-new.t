@@ -18,7 +18,7 @@ use Test::More;
 eval 'use Audio::MPD::Test';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
-plan tests => 10;
+plan tests => 13;
 my $mpd;
 
 #
@@ -40,7 +40,7 @@ start_test_mpd();
 
 #
 # testing constructor params.
-$mpd = Audio::MPD->new('127.0.0.1', $port, 'foobar' );
+$mpd = Audio::MPD->new( host=>'127.0.0.1', port=>$port, password=>'foobar' );
 is( $mpd->_host,     '127.0.0.1', 'host set to param' );
 is( $mpd->_port,     $port,       'port set to param' );
 is( $mpd->_password, 'foobar',    'password set to param' );
@@ -53,10 +53,26 @@ $ENV{MPD_PASSWORD} = 'foobar';
 $mpd = Audio::MPD->new;
 is( $mpd->_host,     $ENV{MPD_HOST},     'host default to $ENV{MPD_HOST}' );
 is( $mpd->_port,     $ENV{MPD_PORT},     'port default to $ENV{MPD_PORT}' );
-is( $mpd->_password, $ENV{MPD_PASSWORD}, 'port default to $ENV{MPD_PASSWORD}' );
+is( $mpd->_password, $ENV{MPD_PASSWORD}, 'password default to $ENV{MPD_PASSWORD}' );
+
+delete $ENV{MPD_HOST};
+delete $ENV{MPD_PASSWORD};
+$ENV{MPD_HOST} = 'foobar@127.0.0.1';
+is( $mpd->_host,     '127.0.0.1', 'host detected when $ENV{MPD_HOST} is passwd@host' );
+is( $mpd->_password, 'foobar',    'password detected when $ENV{MPD_HOST} is passwd@host' );
+
+$mpd = Audio::MPD->new;
 
 delete $ENV{MPD_HOST};
 delete $ENV{MPD_PORT};
-delete $ENV{MPD_PASSWORD};
+
+
+#
+# testing connection type
+$mpd = Audio::MPD->new( port=>16600,conntype=>$REUSE );
+$mpd->ping;
+$mpd->ping;
+$mpd->ping;
+isa_ok( $mpd->_socket, 'IO::Socket', 'socket is created and retained' );
 
 exit;
