@@ -1,6 +1,6 @@
 #
 # This file is part of Audio::MPD
-# Copyright (c) 2007 Jerome Quelin, all rights reserved.
+# Copyright (c) 2007-2008 Jerome Quelin, all rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -28,7 +28,7 @@ __PACKAGE__->mk_accessors(
         collection playlist version ] );
 
 
-our $VERSION = '0.19.2';
+our $VERSION = '0.19.3';
 
 Readonly our $REUSE => 0;
 Readonly our $ONCE  => 1;
@@ -655,7 +655,11 @@ Sends a ping command to the mpd server.
 
 =item $mpd->version()
 
-Return the version number for the server we are connected to.
+Return mpd's version number as advertised during connection. Note that
+mpd returns B<protocol> version when connected. This protocol version
+can differ from the real mpd version. eg, mpd version 0.13.2 is
+"speaking" and thus advertising version 0.13.0.
+
 
 
 =item $mpd->kill()
@@ -868,7 +872,7 @@ documented by Nicholas J. Humfrey C<< <njh at aelius.com> >>.
 
 Copyright (c) 2005 Tue Abrahamsen, all rights reserved.
 Copyright (c) 2006 Nicolas J. Humfrey, all rights reserved.
-Copyright (c) 2007 Jerome Quelin, all rights reserved.
+Copyright (c) 2007-2008 Jerome Quelin, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

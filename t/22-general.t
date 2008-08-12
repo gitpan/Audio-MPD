@@ -1,7 +1,7 @@
 #!perl
 #
 # This file is part of Audio::MPD
-# Copyright (c) 2007 Jerome Quelin, all rights reserved.
+# Copyright (c) 2007-2008 Jerome Quelin, all rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -25,8 +25,8 @@ my $mpd = Audio::MPD->new;
 #
 # testing mpd version.
 SKIP: {
-    my $output = qx[mpd --version 2>/dev/null];
-    skip 'need mpd installed', 1 unless $output =~ /^mpd .* ([\d.]+)\n/;
+    my $output = qx{echo | nc -w1 localhost 6600 2>/dev/null};
+    skip 'need netcat installed', 1 unless $output =~ /^OK .* ([\d.]+)\n/;
     is( $mpd->version, $1, 'mpd version grabbed during connection' );
 }
 
