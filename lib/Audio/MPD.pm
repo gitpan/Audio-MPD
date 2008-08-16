@@ -28,7 +28,7 @@ __PACKAGE__->mk_accessors(
         collection playlist version ] );
 
 
-our $VERSION = '0.19.3';
+our $VERSION = '0.19.4';
 
 Readonly our $REUSE => 0;
 Readonly our $ONCE  => 1;
@@ -847,25 +847,54 @@ See C<Audio::MPD::Playlist> documentation for more details on available
 methods.
 
 
+
+=head1 BUGS
+
+Please report any bugs or feature requests to
+C<bug-audio-mpd@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Audio-MPD>. I will be
+notified, and then you'll automatically be notified of progress on your
+bug as I make changes.
+
+
+
 =head1 SEE ALSO
 
 You can find more information on the mpd project on its homepage at
 L<http://www.musicpd.org>, or its wiki L<http://mpd.wikia.com>.
 
-Regarding this Perl module, you can report bugs on CPAN via
-L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Audio-MPD>.
-
 Audio::MPD development takes place on <audio-mpd@googlegroups.com>: feel free
 to join us. (use L<http://groups.google.com/group/audio-mpd> to sign in). Our
-subversion repository is located at L<https://svn.musicpd.org>.
+git repository is located at L<git://repo.or.cz/audio-mpd.git>, and can
+be browsed at L<http://repo.or.cz/w/audio-mpd.git>.
+
+
+You can also look for information on this module at:
+
+=over 4
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Audio-MPD>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/Audio-MPD>
+
+=item * Open bugs
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Audio-MPD>
+
+=back
+
 
 
 =head1 AUTHOR
 
-Jerome Quelin, C<< <jquelin at cpan.org> >>
+Jerome Quelin, C<< <jquelin@cpan.org> >>
 
-Original code by Tue Abrahamsen C<< <tue.abrahamsen at gmail.com> >>,
-documented by Nicholas J. Humfrey C<< <njh at aelius.com> >>.
+Original code by Tue Abrahamsen C<< <tue.abrahamsen@gmail.com> >>,
+documented by Nicholas J. Humfrey C<< <njh@aelius.com> >>.
 
 
 =head1 COPYRIGHT & LICENSE
