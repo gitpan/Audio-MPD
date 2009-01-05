@@ -1,6 +1,6 @@
 #
 # This file is part of Audio::MPD
-# Copyright (c) 2007-2008 Jerome Quelin, all rights reserved.
+# Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -307,7 +307,7 @@ songs in the current playlist.
 =item $pl->items_changed_since( $plversion )
 
 Return a list with all the songs (as AMC::Item::Song objects) added to
-the playlist since playlist $plversion.
+the playlist since playlist C<$plversion>.
 
 
 =back
@@ -325,8 +325,8 @@ current playlist. No return value.
 
 =item $pl->delete( $song [, $song [...] ] )
 
-Remove song number C<$song>s (starting from 0) from the current playlist. No
-return value.
+Remove the specified C<$song> numbers (starting from 0) from the current
+playlist. No return value.
 
 
 =item $pl->deleteid( $songid [, $songid [...] ] )
@@ -342,7 +342,7 @@ Remove all the songs from the current playlist. No return value.
 
 =item $pl->crop()
 
-Remove all of the songs from the current playlist *except* the
+Remove all of the songs from the current playlist B<except> the
 song currently playing.
 
 
@@ -420,7 +420,7 @@ Jerome Quelin, C<< <jquelin@cpan.org> >>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright (c) 2007-2008 Jerome Quelin, all rights reserved.
+Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
