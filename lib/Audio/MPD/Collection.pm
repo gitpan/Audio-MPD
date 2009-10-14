@@ -1,23 +1,25 @@
-#
-# This file is part of Audio::MPD
-# Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the same terms as Perl itself.
-#
-#
+# 
+# This file is part of Audio-MPD
+# 
+# This software is copyright (c) 2007 by Jerome Quelin.
+# 
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+# 
+use warnings;
+use strict;
 
 package Audio::MPD::Collection;
+our $VERSION = '0.19.8';
 
-use strict;
-use warnings;
+
+# ABSTRACT: class to query MPD's collection
+
+
 use Scalar::Util qw[ weaken ];
 
 use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _mpd ] );
-
-
-#our ($VERSION) = '$Rev: 5284 $' =~ /(\d+)/;
 
 
 #--
@@ -307,25 +309,28 @@ sub songs_with_title_partial {
 
 1;
 
-__END__
 
+
+
+=pod
 
 =head1 NAME
 
-Audio::MPD::Collection - an object to query MPD's collection
+Audio::MPD::Collection - class to query MPD's collection
 
+=head1 VERSION
+
+version 0.19.8
 
 =head1 SYNOPSIS
 
     my $song = $mpd->collection->random_song;
-
 
 =head1 DESCRIPTION
 
 C<Audio::MPD::Collection> is a class meant to access & query MPD's
 collection. You will be able to use those high-level methods instead
 of using the low-level methods provided by mpd itself.
-
 
 =head1 PUBLIC METHODS
 
@@ -343,8 +348,7 @@ Note that you're not supposed to call this constructor yourself, an
 C<Audio::MPD::Collection> is automatically created for you during the creation
 of an C<Audio::MPD> object.
 
-=back
-
+=back 
 
 =head2 Retrieving songs & directories
 
@@ -358,7 +362,6 @@ currently known by mpd.
 If C<$path> is supplied (relative to mpd root), restrict the retrieval to
 songs and dirs in this directory.
 
-
 =item $coll->all_items_simple( [$path] )
 
 Return B<all> C<Audio::MPD::Common::Item>s (both songs & directories)
@@ -371,7 +374,6 @@ B</!\ Warning>: the C<Audio::MPD::Common::Item::Song> objects will only
 have their tag C<file> filled. Any other tag will be empty, so don't use
 this sub for any other thing than a quick scan!
 
-
 =item $coll->items_in_dir( [$path] )
 
 Return the items in the given C<$path>. If no C<$path> supplied, do it on
@@ -379,9 +381,7 @@ mpd's root directory.
 
 Note that this sub does not work recusrively on all directories.
 
-
-=back
-
+=back 
 
 =head2 Retrieving the whole collection
 
@@ -394,34 +394,27 @@ Return B<all> C<Audio::MPD::Common::Item::Song>s currently known by mpd.
 If C<$path> is supplied (relative to mpd root), restrict the retrieval to
 songs and dirs in this directory.
 
-
 =item $coll->all_albums()
 
 Return the list of all albums (strings) currently known by mpd.
-
 
 =item $coll->all_artists()
 
 Return the list of all artists (strings) currently known by mpd.
 
-
 =item $coll->all_titles()
 
 Return the list of all song titles (strings) currently known by mpd.
-
 
 =item $coll->all_pathes()
 
 Return the list of all pathes (strings) currently known by mpd.
 
-
 =item $coll->all_playlists()
 
 Return the list of all playlists (strings) currently known by mpd.
 
-
-=back
-
+=back 
 
 =head2 Picking a song
 
@@ -431,15 +424,12 @@ Return the list of all playlists (strings) currently known by mpd.
 
 Return the C<Audio::MPD::Common::Item::Song> which correspond to C<$path>.
 
-
 =item $coll->songs_with_filename_partial( $string )
 
 Return the C<Audio::MPD::Common::Item::Song>s containing C<$string> in
 their path.
 
-
-=back
-
+=back 
 
 =head2 Songs, albums & artists relations
 
@@ -450,60 +440,49 @@ their path.
 Return all albums (strings) performed by C<$artist> or where C<$artist>
 participated.
 
-
 =item $coll->songs_by_artist( $artist )
 
 Return all C<Audio::MPD::Common::Item::Song>s performed by C<$artist>.
-
 
 =item $coll->songs_by_artist_partial( $string )
 
 Return all C<Audio::MPD::Common::Item::Song>s performed by an artist
 with C<$string> in her name.
 
-
 =item $coll->songs_from_album( $album )
 
 Return all C<Audio::MPD::Common::Item::Song>s appearing in C<$album>.
-
 
 =item $coll->songs_from_album_partial( $string )
 
 Return all C<Audio::MPD::Common::Item::Song>s appearing in album
 containing C<$string>.
 
-
 =item $coll->songs_with_title( $title )
 
 Return all C<Audio::MPD::Common::Item::Song>s which title is exactly
 C<$title>.
-
 
 =item $coll->songs_with_title_partial( $string )
 
 Return all C<Audio::MPD::Common::Item::Song>s where C<$string> is part
 of the title.
 
-
-=back
-
-
-=head1 SEE ALSO
-
-For all related information (bug reporting, mailing-list, pointers to
-MPD, etc.), refer to C<Audio::MPD>'s pod, section C<SEE ALSO>
-
+=back 
 
 =head1 AUTHOR
 
-Jerome Quelin, C<< <jquelin@cpan.org> >>
+  Jerome Quelin
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2007 by Jerome Quelin.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut 
 
 
-=head1 COPYRIGHT & LICENSE
 
-Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
+__END__

@@ -1,16 +1,19 @@
-#
-# This file is part of Audio::MPD
-# Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the same terms as Perl itself.
-#
-#
-
-package Audio::MPD;
-
+# 
+# This file is part of Audio-MPD
+# 
+# This software is copyright (c) 2007 by Jerome Quelin.
+# 
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+# 
 use warnings;
 use strict;
+
+package Audio::MPD;
+our $VERSION = '0.19.8';
+
+
+# ABSTRACT: class to talk to MPD (Music Player Daemon) servers
 
 use Audio::MPD::Collection;
 use Audio::MPD::Common::Item;
@@ -26,9 +29,6 @@ use base qw{ Exporter Class::Accessor::Fast };
 __PACKAGE__->mk_accessors(
     qw[ _conntype _host _password _port _socket
         collection playlist version ] );
-
-
-our $VERSION = '0.19.7';
 
 Readonly our $REUSE => 0;
 Readonly our $ONCE  => 1;
@@ -55,7 +55,8 @@ sub new {
     my ($class, %opts) = @_;
 
     # use mpd defaults.
-    my ($default_password, $default_host) = split( '@', $ENV{MPD_HOST} )
+    my ($default_password, $default_host);
+    ($default_password, $default_host) = split( '@', $ENV{MPD_HOST} )
        if exists $ENV{MPD_HOST} && $ENV{MPD_HOST} =~ /@/;
     my $host     = $opts{host}     || $default_host      || $ENV{MPD_HOST} || 'localhost';
     my $port     = $opts{port}     || $ENV{MPD_PORT}     || '6600';
@@ -568,7 +569,8 @@ sub seekid {
 
 
 
-__END__
+
+
 
 =pod
 
@@ -576,6 +578,11 @@ __END__
 
 Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
+=head1 VERSION
+
+version 0.19.8
+
+=pod 
 
 =head1 SYNOPSIS
 
@@ -585,7 +592,6 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
     $mpd->play;
     sleep 10;
     $mpd->next;
-
 
 =head1 DESCRIPTION
 
@@ -611,7 +617,6 @@ The C<POE::Component::Client::MPD> module is way safer - you're advised
 to use it instead of C<Audio::MPD>. Or you can try to set C<conntype> to
 C<$REUSE> (see C<Audio::MPD> constructor for more details), but you
 would be then on your own to deal with disconnections.
-
 
 =head1 METHODS
 
@@ -645,11 +650,9 @@ change how the connection to mpd server is handled. It can be either
 C<$REUSE> to reuse the same connection or C<$ONCE> to open a new
 connection per command (default)
 
-=back
+=back 
 
-
-=back
-
+=back 
 
 =head2 Controlling the server
 
@@ -659,7 +662,6 @@ connection per command (default)
 
 Sends a ping command to the mpd server.
 
-
 =item $mpd->version()
 
 Return mpd's version number as advertised during connection. Note that
@@ -667,18 +669,14 @@ mpd returns B<protocol> version when connected. This protocol version
 can differ from the real mpd version. eg, mpd version 0.13.2 is
 "speaking" and thus advertising version 0.13.0.
 
-
-
 =item $mpd->kill()
 
 Send a message to the MPD server telling it to shut down.
-
 
 =item $mpd->password( [$password] )
 
 Change password used to communicate with MPD server to C<$password>.
 Empty string is assumed if C<$password> is not supplied.
-
 
 =item $mpd->updatedb( [$path] )
 
@@ -686,14 +684,11 @@ Force mpd to recan its collection. If C<$path> (relative to MPD's music
 directory) is supplied, MPD will only scan it - otherwise, MPD will
 rescan its whole collection.
 
-
 =item $mpd->urlhandlers()
 
 Return an array of supported URL schemes.
 
-
-=back
-
+=back 
 
 =head2 Handling volume & output
 
@@ -705,20 +700,17 @@ Sets the audio output volume percentage to absolute C<$volume>.  If
 C<$volume> is prefixed by '+' or '-' then the volume is changed
 relatively by that value.
 
-
 =item $mpd->output_enable( $output )
 
 Enable the specified audio output. C<$output> is the ID of the audio
 output.
-
 
 =item $mpd->output_disable( $output )
 
 Disable the specified audio output. C<$output> is the ID of the audio
 output.
 
-=back
-
+=back 
 
 =head2 Retrieving info from current state
 
@@ -729,33 +721,28 @@ output.
 Return an C<Audio::MPD::Common::Stats> object with the current statistics
 of MPD. See the associated pod for more information.
 
-
 =item $mpd->status()
 
 Return an C<Audio::MPD::Common::Status> object with various information on
 current MPD server settings. Check the embedded pod for more information on
 the available accessors.
 
-
 =item $mpd->current()
 
 Return an C<Audio::MPD::Common::Item::Song> representing the song currently
 playing.
-
 
 =item $mpd->song( [$song] )
 
 Return an C<Audio::MPD::Common::Item::Song> representing the song number
 C<$song>. If C<$song> is not supplied, returns the current song.
 
-
 =item $mpd->songid( [$songid] )
 
 Return an C<Audio::MPD::Common::Item::Song> representing the song with id
 C<$songid>. If C<$songid> is not supplied, returns the current song.
 
-=back
-
+=back 
 
 =head2 Altering MPD settings
 
@@ -766,12 +753,10 @@ C<$songid>. If C<$songid> is not supplied, returns the current song.
 Set the repeat mode to C<$repeat> (1 or 0). If C<$repeat> is not
 specified then the repeat mode is toggled.
 
-
 =item $mpd->random( [$random] )
 
 Set the random mode to C<$random> (1 or 0). If C<$random> is not
 specified then the random mode is toggled.
-
 
 =item $mpd->fade( [$seconds] )
 
@@ -779,8 +764,7 @@ Enable crossfading and set the duration of crossfade between songs.  If
 C<$seconds> is not specified or $seconds is 0, then crossfading is
 disabled.
 
-=back
-
+=back 
 
 =head2 Controlling playback
 
@@ -791,12 +775,10 @@ disabled.
 Begin playing playlist at song number C<$song>. If no argument supplied,
 resume playing.
 
-
 =item $mpd->playid( [$songid] )
 
 Begin playing playlist at song ID C<$songid>. If no argument supplied,
 resume playing.
-
 
 =item $mpd->pause( [$state] )
 
@@ -805,21 +787,17 @@ if C<$state> is 1 then the current track is paused.
 
 Note that if C<$state> is not given, pause state will be toggled.
 
-
 =item $mpd->stop()
 
 Stop playback.
-
 
 =item $mpd->next()
 
 Play next song in playlist.
 
-
 =item $mpd->prev()
 
 Play previous song in playlist.
-
 
 =item $mpd->seek( $time, [$song])
 
@@ -827,15 +805,13 @@ Seek to C<$time> seconds in song number C<$song>. If C<$song> number is
 not specified then the perl module will try and seek to C<$time> in the
 current song.
 
-
 =item $mpd->seekid( $time, $songid )
 
 Seek to C<$time> seconds in song ID C<$songid>. If C<$song> number is
 not specified then the perl module will try and seek to C<$time> in the
 current song.
 
-=back
-
+=back 
 
 =head2 Searching the collection
 
@@ -847,7 +823,6 @@ associated C<Audio::MPD::Collection> object. You will then be able to call:
 See C<Audio::MPD::Collection> documentation for more details on available
 methods.
 
-
 =head2 Handling the playlist
 
 To update the playlist, use the C<playlist()> accessor, returning the
@@ -858,29 +833,19 @@ associated C<Audio::MPD::Playlist> object. You will then be able to call:
 See C<Audio::MPD::Playlist> documentation for more details on available
 methods.
 
-
-
-=head1 BUGS
-
-Please report any bugs or feature requests to
-C<bug-audio-mpd@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Audio-MPD>. I will be
-notified, and then you'll automatically be notified of progress on your
-bug as I make changes.
-
-
-
 =head1 SEE ALSO
 
 You can find more information on the mpd project on its homepage at
 L<http://www.musicpd.org>.wikia.com>.
+
+Original code (2005) by Tue Abrahamsen C<< <tue.abrahamsen@gmail.com> >>,
+documented in 2006 by Nicholas J. Humfrey C<< <njh@aelius.com> >>.
 
 C<Audio::MPD> development takes place on <audio-mpd@googlegroups.com>:
 feel free to join us. (use L<http://groups.google.com/group/audio-mpd>
 to sign in). Our git repository is located at
 L<git://repo.or.cz/audio-mpd.git>, and can be browsed at
 L<http://repo.or.cz/w/audio-mpd.git>.
-
 
 You can also look for information on this module at:
 
@@ -898,17 +863,11 @@ L<http://cpanratings.perl.org/d/Audio-MPD>
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Audio-MPD>
 
-=back
-
-
+=back 
 
 =head1 AUTHOR
 
 Jerome Quelin, C<< <jquelin@cpan.org> >>
-
-Original code by Tue Abrahamsen C<< <tue.abrahamsen@gmail.com> >>,
-documented by Nicholas J. Humfrey C<< <njh@aelius.com> >>.
-
 
 =head1 COPYRIGHT & LICENSE
 
@@ -919,4 +878,17 @@ Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
-=cut
+
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2007 by Jerome Quelin.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut 
+
+
+
+__END__

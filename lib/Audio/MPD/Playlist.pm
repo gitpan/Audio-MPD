@@ -1,23 +1,24 @@
-#
-# This file is part of Audio::MPD
-# Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the same terms as Perl itself.
-#
-#
+# 
+# This file is part of Audio-MPD
+# 
+# This software is copyright (c) 2007 by Jerome Quelin.
+# 
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+# 
+use warnings;
+use strict;
 
 package Audio::MPD::Playlist;
+our $VERSION = '0.19.8';
 
-use strict;
-use warnings;
+
+# ABSTRACT: class to mess MPD's playlist
+
 use Scalar::Util qw[ weaken ];
 
 use base qw[ Class::Accessor::Fast ];
 __PACKAGE__->mk_accessors( qw[ _mpd ] );
-
-
-#our ($VERSION) = '$Rev$' =~ /(\d+)/;
 
 
 #--
@@ -88,7 +89,7 @@ sub add {
     my ($self, @pathes) = @_;
     my $command =
           "command_list_begin\n"
-        . join( '', map { s/"/\\"/g; qq[add "$_"\n] } @pathes )
+        . join( '', map { my $p=$_; $p=~s/"/\\"/g; qq[add "$p"\n] } @pathes )
         . "command_list_end\n";
     $self->_mpd->_send_command( $command );
 }
@@ -104,7 +105,7 @@ sub delete {
     my ($self, @songs) = @_;
     my $command =
           "command_list_begin\n"
-        . join( '', map { s/"/\\"/g; "delete $_\n" } @songs )
+        . join( '', map { my $p=$_; $p=~s/"/\\"/g; "delete $p\n" } @songs )
         . "command_list_end\n";
     $self->_mpd->_send_command( $command );
 }
@@ -256,24 +257,27 @@ sub rm {
 
 1;
 
-__END__
 
+
+
+=pod
 
 =head1 NAME
 
-Audio::MPD::Playlist - an object to mess MPD's playlist
+Audio::MPD::Playlist - class to mess MPD's playlist
 
+=head1 VERSION
+
+version 0.19.8
 
 =head1 SYNOPSIS
 
     my $song = $mpd->playlist->randomize;
 
-
 =head1 DESCRIPTION
 
 C<Audio::MPD::Playlist> is a class meant to access & update MPD's
 playlist.
-
 
 =head1 PUBLIC METHODS
 
@@ -291,8 +295,7 @@ Note that you're not supposed to call this constructor yourself, an
 C<Audio::MPD::Playlist> is automatically created for you during the creation
 of an C<Audio::MPD> object.
 
-=back
-
+=back 
 
 =head2 Retrieving information
 
@@ -303,15 +306,12 @@ of an C<Audio::MPD> object.
 Return an array of C<Audio::MPD::Common::Item::Song>s, one for each of the
 songs in the current playlist.
 
-
 =item $pl->items_changed_since( $plversion )
 
 Return a list with all the songs (as AMC::Item::Song objects) added to
 the playlist since playlist C<$plversion>.
 
-
-=back
-
+=back 
 
 =head2 Adding / removing songs
 
@@ -322,32 +322,26 @@ the playlist since playlist C<$plversion>.
 Add the songs identified by C<$path> (relative to MPD's music directory) to the
 current playlist. No return value.
 
-
 =item $pl->delete( $song [, $song [...] ] )
 
 Remove the specified C<$song> numbers (starting from 0) from the current
 playlist. No return value.
-
 
 =item $pl->deleteid( $songid [, $songid [...] ] )
 
 Remove the specified C<$songid>s (as assigned by mpd when inserted in playlist)
 from the current playlist. No return value.
 
-
 =item $pl->clear()
 
 Remove all the songs from the current playlist. No return value.
-
 
 =item $pl->crop()
 
 Remove all of the songs from the current playlist B<except> the
 song currently playing.
 
-
-=back
-
+=back 
 
 =head2 Changing playlist order
 
@@ -357,31 +351,25 @@ song currently playing.
 
 Shuffle the current playlist. No return value.
 
-
 =item $pl->swap( $song1, $song2 )
 
 Swap positions of song number C<$song1> and C<$song2> in the current
 playlist. No return value.
-
 
 =item $pl->swapid( $songid1, $songid2 )
 
 Swap the postions of song ID C<$songid1> with song ID C<$songid2> in the
 current playlist. No return value.
 
-
 =item $pl->move( $song, $newpos )
 
 Move song number C<$song> to the position C<$newpos>. No return value.
-
 
 =item $pl->moveid( $songid, $newpos )
 
 Move song ID C<$songid> to the position C<$newpos>. No return value.
 
-
-=back
-
+=back 
 
 =head2 Managing playlists
 
@@ -391,38 +379,31 @@ Move song ID C<$songid> to the position C<$newpos>. No return value.
 
 Load list of songs from specified C<$playlist> file. No return value.
 
-
 =item $pl->save( $playlist )
 
 Save the current playlist to a file called C<$playlist> in MPD's playlist
 directory. No return value.
-
 
 =item $pl->rm( $playlist )
 
 Delete playlist named C<$playlist> from MPD's playlist directory. No
 return value.
 
-
-=back
-
-
-=head1 SEE ALSO
-
-For all related information (bug reporting, mailing-list, pointers to
-MPD, etc.), refer to C<Audio::MPD>'s pod, section C<SEE ALSO>
-
+=back 
 
 =head1 AUTHOR
 
-Jerome Quelin, C<< <jquelin@cpan.org> >>
+  Jerome Quelin
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2007 by Jerome Quelin.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut 
 
 
-=head1 COPYRIGHT & LICENSE
 
-Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
+__END__

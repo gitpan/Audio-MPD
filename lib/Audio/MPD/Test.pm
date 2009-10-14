@@ -1,16 +1,19 @@
-#
-# This file is part of Audio::MPD
-# Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the same terms as Perl itself.
-#
-#
-
-package Audio::MPD::Test;
-
+# 
+# This file is part of Audio-MPD
+# 
+# This software is copyright (c) 2007 by Jerome Quelin.
+# 
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+# 
 use strict;
 use warnings;
+
+package Audio::MPD::Test;
+our $VERSION = '0.19.8';
+
+
+# ABSTRACT: automate launching of fake mdp for testing purposes
 
 use Exporter;
 use FindBin     qw[ $Bin ];
@@ -19,7 +22,6 @@ use Readonly;
 
 use base qw[ Exporter ];
 our @EXPORT = qw[ customize_test_mpd_configuration start_test_mpd stop_test_mpd ];
-#our ($VERSION) = '$Rev: 5284 $' =~ /(\d+)/;
 
 
 Readonly my $TEMPLATE => "$Bin/mpd-test/mpd.conf.template";
@@ -132,19 +134,24 @@ sub _stop_user_mpd_if_needed {
 
 1;
 
-__END__
+
+
+
+=pod
 
 =head1 NAME
 
 Audio::MPD::Test - automate launching of fake mdp for testing purposes
 
+=head1 VERSION
+
+version 0.19.8
 
 =head1 SYNOPSIS
 
     use Audio::MPD::Test; # die if error
     [...]
     stop_fake_mpd();
-
 
 =head1 DESCRIPTION
 
@@ -161,14 +168,12 @@ run the test mpd with its newly created configuration file.
 
 Everything described above is done automatically when the module is C<use>-d.
 
-
 Once the tests are run, the mpd server will be shut down, and the original
 one will be relaunched (if there was one).
 
 Note that the test mpd will listen to C<localhost>, so you are on the safe
 side. Note also that the test suite comes with its own ogg files - and yes,
 we can redistribute them since it's only some random voice recordings :-)
-
 
 =head2 Advanced usage
 
@@ -192,27 +197,23 @@ located in t/mpd-test. The string PWD will be replaced by the real path -
 ie, where the tarball has been untarred. The string PORT will be replaced
 by $port if specified, 6600 otherwise (MPD default).
 
-=back
+=back 
 
 This might be useful when trying to test connections with mpd server.
 
-
-=head1 SEE ALSO
-
-For all related information (bug reporting, mailing-list, pointers to
-MPD, etc.), refer to C<Audio::MPD>'s pod, section C<SEE ALSO>
-
-
 =head1 AUTHOR
 
-Jerome Quelin, C<< <jquelin@cpan.org> >>
+  Jerome Quelin
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2007 by Jerome Quelin.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut 
 
 
-=head1 COPYRIGHT & LICENSE
 
-Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
+__END__
