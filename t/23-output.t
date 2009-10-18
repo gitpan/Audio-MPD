@@ -15,7 +15,7 @@ use Audio::MPD;
 use Test::More;
 
 # are we able to test module?
-eval 'use Audio::MPD::Test';
+eval 'use Test::Corpus::Audio::MPD';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
 plan tests => 5;
@@ -62,6 +62,3 @@ $mpd->output_enable(0);
 sleep(1);
 $mpd->play; $mpd->pause;
 is( $mpd->status->error, undef, 'enabling output' );
-
-
-exit;

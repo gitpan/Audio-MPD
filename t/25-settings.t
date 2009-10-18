@@ -15,7 +15,7 @@ use Audio::MPD;
 use Test::More;
 
 # are we able to test module?
-eval 'use Audio::MPD::Test';
+eval 'use Test::Corpus::Audio::MPD';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
 plan tests => 10;
@@ -52,6 +52,3 @@ $mpd->fade(15);
 is( $mpd->status->xfade, 15, 'enabling fading' );
 $mpd->fade;
 is( $mpd->status->xfade,  0, 'disabling fading by default' );
-
-
-exit;

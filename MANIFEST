@@ -14,7 +14,6 @@ examples/mpc.pl
 lib/Audio/MPD.pm
 lib/Audio/MPD/Collection.pm
 lib/Audio/MPD/Playlist.pm
-lib/Audio/MPD/Test.pm
 t/00-compile.t
 t/20-connection.t
 t/21-new.t
@@ -26,12 +25,6 @@ t/26-playback.t
 t/30-collection.t
 t/40-playlist.t
 t/author-critic.t
-t/mpd-test/mpd.conf.template
-t/mpd-test/music/dir1/title-artist-album.ogg
-t/mpd-test/music/dir1/title-artist.ogg
-t/mpd-test/music/dir2/album.ogg
-t/mpd-test/music/title.ogg
-t/mpd-test/playlists/test.m3u
 t/release-meta-yaml.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t

@@ -15,7 +15,7 @@ use Audio::MPD;
 use Test::More;
 
 # are we able to test module?
-eval 'use Audio::MPD::Test';
+eval 'use Test::Corpus::Audio::MPD';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
 plan tests => 7;
@@ -35,6 +35,7 @@ SKIP: {
 # testing kill.
 $mpd->ping;
 $mpd->kill;
+sleep 1; # let mpd shut down the socket cleanly
 eval { $mpd->ping };
 like( $@, qr/^Could not create socket:/, 'kill shuts mpd down' );
 start_test_mpd();
@@ -62,5 +63,3 @@ is( $@, '', 'updating part of collection' );
 # testing urlhandlers.
 my @handlers = $mpd->urlhandlers;
 is( scalar @handlers, 0, 'only one url handler supported' );
-
-exit;

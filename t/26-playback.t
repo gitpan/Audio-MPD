@@ -15,7 +15,7 @@ use Audio::MPD;
 use Test::More;
 
 # are we able to test module?
-eval 'use Audio::MPD::Test';
+eval 'use Test::Corpus::Audio::MPD';
 plan skip_all => $@ if $@ =~ s/\n+Compilation failed.*//s;
 
 plan tests => 19;
@@ -73,8 +73,8 @@ is( $mpd->status->song, 1, 'prev() changes track to previous one' );
 
 #
 # testing seek / seekid.
-TODO: {
-    local $TODO = "detection method doesn't always work - depends on timing";
+SKIP: {
+    skip "detection method doesn't always work - depends on timing", 8;
     $mpd->pause(1);
     $mpd->seek( 1, 2 );
     is( $mpd->status->song,     2, 'seek() can change the current track' );
@@ -93,7 +93,3 @@ TODO: {
     $mpd->seekid(1);
     is( $mpd->status->time->sofar_secs, 1, 'seekid() defaults to current song' );
 }
-
-
-
-exit;

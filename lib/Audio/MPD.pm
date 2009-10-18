@@ -6,11 +6,12 @@
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
 # 
+use 5.008;
 use warnings;
 use strict;
 
 package Audio::MPD;
-our $VERSION = '0.19.8';
+our $VERSION = '0.19.9';
 
 
 # ABSTRACT: class to talk to MPD (Music Player Daemon) servers
@@ -580,7 +581,7 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
 =head1 VERSION
 
-version 0.19.8
+version 0.19.9
 
 =pod 
 
@@ -595,11 +596,11 @@ version 0.19.8
 
 =head1 DESCRIPTION
 
-C<Audio::MPD> gives a clear object-oriented interface for talking to and
+L<Audio::MPD> gives a clear object-oriented interface for talking to and
 controlling MPD (Music Player Daemon) servers. A connection to the MPD
-server is established as soon as a new C<Audio::MPD> object is created.
+server is established as soon as a new L<Audio::MPD> object is created.
 
-Since mpd is still in 0.x versions, C<Audio::MPD> sticks to latest mpd
+Since mpd is still in 0.x versions, L<Audio::MPD> sticks to latest mpd
 (0.14 as time of writing) protocol & behaviour, and does B<not> try to
 maintain backward compatibility.
 
@@ -607,15 +608,15 @@ Note that the module will by default connect to mpd before sending any
 command, and will disconnect after the command has been issued. This
 scheme is far from optimal, but allows us not to care about timeout
 disconnections. Because of that, the C<idle> command (new in mpd 0.14)
-is B<not> (and will not) be supported in C<Audio::MPD>. This will be
-implemented in C<POE::Component::Client::MPD>.
+is B<not> (and will not) be supported in L<Audio::MPD>. This will be
+implemented in L<POE::Component::Client::MPD>.
 
-B</!\> Note that C<Audio::MPD> is using high-level, blocking sockets.
+B</!\> Note that L<Audio::MPD> is using high-level, blocking sockets.
 This means that if the mpd server is slow, or hangs for whatever reason,
 or even crash abruptly, the program will be hung forever in this sub.
-The C<POE::Component::Client::MPD> module is way safer - you're advised
-to use it instead of C<Audio::MPD>. Or you can try to set C<conntype> to
-C<$REUSE> (see C<Audio::MPD> constructor for more details), but you
+The L<POE::Component::Client::MPD> module is way safer - you're advised
+to use it instead of L<Audio::MPD>. Or you can try to set C<conntype> to
+C<$REUSE> (see L<Audio::MPD> constructor for more details), but you
 would be then on your own to deal with disconnections.
 
 =head1 METHODS
@@ -626,7 +627,7 @@ would be then on your own to deal with disconnections.
 
 =item new( [%opts] )
 
-This is the constructor for C<Audio::MPD>. One can specify the following
+This is the constructor for L<Audio::MPD>. One can specify the following
 options:
 
 =over 4
@@ -718,28 +719,28 @@ output.
 
 =item $mpd->stats()
 
-Return an C<Audio::MPD::Common::Stats> object with the current statistics
+Return an L<Audio::MPD::Common::Stats> object with the current statistics
 of MPD. See the associated pod for more information.
 
 =item $mpd->status()
 
-Return an C<Audio::MPD::Common::Status> object with various information on
+Return an L<Audio::MPD::Common::Status> object with various information on
 current MPD server settings. Check the embedded pod for more information on
 the available accessors.
 
 =item $mpd->current()
 
-Return an C<Audio::MPD::Common::Item::Song> representing the song currently
+Return an L<Audio::MPD::Common::Item::Song> representing the song currently
 playing.
 
 =item $mpd->song( [$song] )
 
-Return an C<Audio::MPD::Common::Item::Song> representing the song number
+Return an L<Audio::MPD::Common::Item::Song> representing the song number
 C<$song>. If C<$song> is not supplied, returns the current song.
 
 =item $mpd->songid( [$songid] )
 
-Return an C<Audio::MPD::Common::Item::Song> representing the song with id
+Return an L<Audio::MPD::Common::Item::Song> representing the song with id
 C<$songid>. If C<$songid> is not supplied, returns the current song.
 
 =back 
@@ -816,21 +817,21 @@ current song.
 =head2 Searching the collection
 
 To search the collection, use the C<collection()> accessor, returning the
-associated C<Audio::MPD::Collection> object. You will then be able to call:
+associated L<Audio::MPD::Collection> object. You will then be able to call:
 
     $mpd->collection->random_song;
 
-See C<Audio::MPD::Collection> documentation for more details on available
+See L<Audio::MPD::Collection> documentation for more details on available
 methods.
 
 =head2 Handling the playlist
 
 To update the playlist, use the C<playlist()> accessor, returning the
-associated C<Audio::MPD::Playlist> object. You will then be able to call:
+associated L<Audio::MPD::Playlist> object. You will then be able to call:
 
     $mpd->playlist->clear;
 
-See C<Audio::MPD::Playlist> documentation for more details on available
+See L<Audio::MPD::Playlist> documentation for more details on available
 methods.
 
 =head1 SEE ALSO
@@ -841,11 +842,10 @@ L<http://www.musicpd.org>.wikia.com>.
 Original code (2005) by Tue Abrahamsen C<< <tue.abrahamsen@gmail.com> >>,
 documented in 2006 by Nicholas J. Humfrey C<< <njh@aelius.com> >>.
 
-C<Audio::MPD> development takes place on <audio-mpd@googlegroups.com>:
+L<Audio::MPD> development takes place on <audio-mpd@googlegroups.com>:
 feel free to join us. (use L<http://groups.google.com/group/audio-mpd>
 to sign in). Our git repository is located at
-L<git://repo.or.cz/audio-mpd.git>, and can be browsed at
-L<http://repo.or.cz/w/audio-mpd.git>.
+L<http://github.com/jquelin/audio-mpd.git>.
 
 You can also look for information on this module at:
 
@@ -867,18 +867,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Audio-MPD>
 
 =head1 AUTHOR
 
-Jerome Quelin, C<< <jquelin@cpan.org> >>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (c) 2005 Tue Abrahamsen, all rights reserved.
-Copyright (c) 2006 Nicolas J. Humfrey, all rights reserved.
-Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-
+  Jerome Quelin
 
 =head1 COPYRIGHT AND LICENSE
 
