@@ -11,14 +11,18 @@ name: Audio-MPD
 provides:
   Audio::MPD:
     file: lib/Audio/MPD.pm
-    version: 0.19.9
+    version: 0.19.10
   Audio::MPD::Collection:
     file: lib/Audio/MPD/Collection.pm
-    version: 0.19.9
+    version: 0.19.10
   Audio::MPD::Playlist:
     file: lib/Audio/MPD/Playlist.pm
-    version: 0.19.9
+    version: 0.19.10
 requires:
+  Audio::MPD::Common::Item: 0
+  Audio::MPD::Common::Stats: 0
+  Audio::MPD::Common::Status: 0
+  Class::Accessor::Fast: 0
   DB_File: 0
   Data::Dumper: 0
   Encode: 0
@@ -31,7 +35,7 @@ requires:
   Proc::Daemon: 0
   Readonly: 0
   Scalar::Util: 0
-  Test::Corpus::Audio::MPD: 1.092900
+  Test::Corpus::Audio::MPD: 1.092920
   Test::More: 0
   Time::HiRes: 0
   base: 0
@@ -41,4 +45,4 @@ resources:
   MailingList: http://groups.google.com/group/audio-mpd
   homepage: http://search.cpan.org/dist/Audio-MPD
   repository: http://github.com/jquelin/audio-mpd
-version: 0.19.9
+version: 0.19.10

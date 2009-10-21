@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 package Audio::MPD::Collection;
-our $VERSION = '0.19.9';
+our $VERSION = '0.19.10';
 
 
 # ABSTRACT: class to query MPD's collection
@@ -321,7 +321,7 @@ Audio::MPD::Collection - class to query MPD's collection
 
 =head1 VERSION
 
-version 0.19.9
+version 0.19.10
 
 =head1 SYNOPSIS
 
