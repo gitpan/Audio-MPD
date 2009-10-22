@@ -11,23 +11,22 @@ use warnings;
 use strict;
 
 package Audio::MPD::Collection;
-our $VERSION = '0.19.10';
+our $VERSION = '1.092950';
 
 
 # ABSTRACT: class to query MPD's collection
 
+use Moose;
+use MooseX::SemiAffordanceAccessor;
 
-use Scalar::Util qw[ weaken ];
-
-use base qw[ Class::Accessor::Fast ];
-__PACKAGE__->mk_accessors( qw[ _mpd ] );
+has _mpd => ( is=>'ro', required=>1, weak_ref=>1 );
 
 
 #--
 # Constructor
 
 #
-# my $collection = Audio::MPD::Collection->new( $mpd );
+# my $collection = Audio::MPD::Collection->new( _mpd => $mpd );
 #
 # This will create the object, holding a back-reference to the Audio::MPD
 # object itself (for communication purposes). But in order to play safe and
@@ -37,14 +36,6 @@ __PACKAGE__->mk_accessors( qw[ _mpd ] );
 # Audio::MPD::Collection is automatically created for you during the creation
 # of an Audio::MPD object.
 #
-sub new {
-    my ($pkg, $mpd) = @_;
-
-    my $self = { _mpd => $mpd };
-    weaken( $self->{_mpd} );
-    bless $self, $pkg;
-    return $self;
-}
 
 
 #--
@@ -308,6 +299,8 @@ sub songs_with_title_partial {
 }
 
 
+no Moose;
+__PACKAGE__->meta->make_immutable;
 1;
 
 
@@ -321,7 +314,7 @@ Audio::MPD::Collection - class to query MPD's collection
 
 =head1 VERSION
 
-version 0.19.10
+version 1.092950
 
 =head1 SYNOPSIS
 
@@ -333,23 +326,12 @@ L<Audio::MPD::Collection> is a class meant to access & query MPD's
 collection. You will be able to use those high-level methods instead
 of using the low-level methods provided by mpd itself.
 
+Note that you're not supposed to call the constructor yourself, an
+L<Audio::MPD::Collection> is automatically created for you during the
+creation of an L<Audio::MPD> object - it can then be used with the
+C<collection()> accessor.
+
 =head1 PUBLIC METHODS
-
-=head2 Constructor
-
-=over 4
-
-=item new( $mpd )
-
-This will create the object, holding a back-reference to the L<Audio::MPD>
-object itself (for communication purposes). But in order to play safe and
-to free the memory in time, this reference is weakened.
-
-Note that you're not supposed to call this constructor yourself, an
-L<Audio::MPD::Collection> is automatically created for you during the creation
-of an L<Audio::MPD> object.
-
-=back 
 
 =head2 Retrieving songs & directories
 

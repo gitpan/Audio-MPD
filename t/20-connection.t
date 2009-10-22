@@ -26,10 +26,9 @@ isa_ok($mpd, 'Audio::MPD');
 
 #
 # testing error during socket creation.
-$mpd->_port( 16600 );
-eval { $mpd->_send_command( "ping\n" ) };
+eval { Audio::MPD->new(port=>16600) };
 like($@, qr/^Could not create socket/, 'error during socket creation');
-$mpd->_port( 6600 );
+
 
 #
 # testing connection to a non-mpd server - here, we'll try to connect
@@ -37,23 +36,19 @@ $mpd->_port( 6600 );
 my $sendmail_running = grep { /:25\s.*LISTEN/ } qx[ netstat -an ];
 SKIP: {
     skip 'need some sendmail server running', 1 unless $sendmail_running;
-    $mpd->_port( 25 );
-    eval { $mpd->ping };
+    eval { Audio::MPD->new(port=>25) };
     like($@, qr/^Not a mpd server - welcome string was:/, 'wrong server');
 };
-$mpd->_port( 6600 );
 
 
 #
 # testing password sending.
-$mpd->_password( 'wrong-password' );
-eval { $mpd->ping };
+eval { $mpd->set_password( 'wrong-password' ) };
 like($@, qr/\{password\} incorrect password/, 'wrong password');
 
-$mpd->_password('fulladmin');
-eval { $mpd->ping };
+eval { $mpd->set_password('fulladmin') };
 is($@, '', 'correct password sent');
-$mpd->_password('');
+$mpd->set_password('');
 
 
 #

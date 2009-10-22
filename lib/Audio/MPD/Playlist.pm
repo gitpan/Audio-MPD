@@ -11,22 +11,22 @@ use warnings;
 use strict;
 
 package Audio::MPD::Playlist;
-our $VERSION = '0.19.10';
+our $VERSION = '1.092950';
 
 
 # ABSTRACT: class to mess MPD's playlist
 
-use Scalar::Util qw[ weaken ];
+use Moose;
+use MooseX::SemiAffordanceAccessor;
 
-use base qw[ Class::Accessor::Fast ];
-__PACKAGE__->mk_accessors( qw[ _mpd ] );
+has _mpd => ( is=>'ro', required=>1, weak_ref=>1 );
 
 
 #--
 # Constructor
 
 #
-# my $collection = Audio::MPD::Playlist->new( $mpd );
+# my $collection = Audio::MPD::Playlist->new( _mpd => $mpd );
 #
 # This will create the object, holding a back-reference to the Audio::MPD
 # object itself (for communication purposes). But in order to play safe and
@@ -36,14 +36,6 @@ __PACKAGE__->mk_accessors( qw[ _mpd ] );
 # Audio::MPD::Playlist is automatically created for you during the creation
 # of an Audio::MPD object.
 #
-sub new {
-    my ($pkg, $mpd) = @_;
-
-    my $self = { _mpd => $mpd };
-    weaken( $self->{_mpd} );
-    bless $self, $pkg;
-    return $self;
-}
 
 
 #--
@@ -255,7 +247,8 @@ sub rm {
 }
 
 
-
+no Moose;
+__PACKAGE__->meta->make_immutable;
 1;
 
 
@@ -269,34 +262,24 @@ Audio::MPD::Playlist - class to mess MPD's playlist
 
 =head1 VERSION
 
-version 0.19.10
+version 1.092950
 
 =head1 SYNOPSIS
 
-    my $song = $mpd->playlist->randomize;
+    $mpd->playlist->shuffle;
+    # and lots of other methods
 
 =head1 DESCRIPTION
 
 L<Audio::MPD::Playlist> is a class meant to access & update MPD's
 playlist.
 
+Note that you're not supposed to call the constructor yourself, an
+L<Audio::MPD::Playlist> is automatically created for you during the
+creation of an L<Audio::MPD> object - it can then be used with the
+C<playlist()> accessor.
+
 =head1 PUBLIC METHODS
-
-=head2 Constructor
-
-=over 4
-
-=item new( $mpd )
-
-This will create the object, holding a back-reference to the L<Audio::MPD>
-object itself (for communication purposes). But in order to play safe and
-to free the memory in time, this reference is weakened.
-
-Note that you're not supposed to call this constructor yourself, an
-L<Audio::MPD::Playlist> is automatically created for you during the creation
-of an L<Audio::MPD> object.
-
-=back 
 
 =head2 Retrieving information
 

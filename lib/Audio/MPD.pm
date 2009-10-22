@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 package Audio::MPD;
-our $VERSION = '0.19.10';
+our $VERSION = '1.092950';
 
 
 # ABSTRACT: class to talk to MPD (Music Player Daemon) servers
@@ -23,68 +23,55 @@ use Audio::MPD::Common::Status;
 use Audio::MPD::Playlist;
 use Encode;
 use IO::Socket;
-use Readonly;
+use Moose;
+use Moose::Util::TypeConstraints;
+use MooseX::SemiAffordanceAccessor;
 
 
-use base qw{ Exporter Class::Accessor::Fast };
-__PACKAGE__->mk_accessors(
-    qw[ _conntype _host _password _port _socket
-        collection playlist version ] );
+has _socket    => ( is=>'rw', isa=>'IO::Socket::INET' );
 
-Readonly our $REUSE => 0;
-Readonly our $ONCE  => 1;
-
-our @EXPORT = qw[ $REUSE $ONCE ];
+enum CONNTYPE  => qw{ reuse once };
+has conntype   => ( is=>'ro', isa=>'CONNTYPE', default=>'once'  );
+has host       => ( is=>'ro', lazy_build=>1 );
+has password   => ( is=>'rw', lazy_build=>1, trigger=>sub { $_[0]->ping } );
+has port       => ( is=>'ro', lazy_build=>1 );
+has collection => ( is=>'ro', lazy_build=>1, isa=>'Audio::MPD::Collection' );
+has playlist   => ( is=>'ro', lazy_build=>1, isa=>'Audio::MPD::Playlist'   );
+has version    => ( is=>'rw' );
 
 
 #--
-# Constructor
+# initializer & lazy builders
 
-#
-# my $mpd = Audio::MPD->new( [%opts] )
-#
-# This is the constructor for Audio::MPD. One can specify the following
-# options:
-#   - host     => $hostname : defaults to environment var MPD_HOST, then to 'localhost'
-#   - port     => $port     : defaults to env var MPD_PORT, then to 6600
-#   - password => $password : defaults to env var MPD_PASSWORD, then to ''
-#   - conntype => $type     : how the connection to mpd server is handled. it can be
-#               either $REUSE: reuse the same connection
-#                    or $ONCE: open a new connection per command (default)
-#   
-sub new {
-    my ($class, %opts) = @_;
-
-    # use mpd defaults.
-    my ($default_password, $default_host);
-    ($default_password, $default_host) = split( '@', $ENV{MPD_HOST} )
-       if exists $ENV{MPD_HOST} && $ENV{MPD_HOST} =~ /@/;
-    my $host     = $opts{host}     || $default_host      || $ENV{MPD_HOST} || 'localhost';
-    my $port     = $opts{port}     || $ENV{MPD_PORT}     || '6600';
-    my $password = $opts{password} || $ENV{MPD_PASSWORD} || $default_password || '';
-
-    # create & bless the object.
-    my $self = {
-        _host     => $host,
-        _port     => $port,
-        _password => $password,
-        _conntype => exists $opts{conntype} ? $opts{conntype} : $ONCE,
-    };
-    bless $self, $class;
+sub BUILD {
+    my $self = shift;
 
     # create the connection if conntype is set to $REUSE
-    $self->_connect_to_mpd_server if $self->_conntype == $REUSE;
-
-
-    # create the helper objects and store them.
-    $self->collection( Audio::MPD::Collection->new($self) );
-    $self->playlist  ( Audio::MPD::Playlist->new($self) );
+    $self->_connect_to_mpd_server if $self->conntype eq 'reuse';
 
     # try to issue a ping to test connection - this can die.
     $self->ping;
-
-    return $self;
 }
+
+#
+# my ($passwd, $host, $port) = _parse_env_var();
+#
+# parse MPD_HOST environment variable, and extract its components. the
+# canonical format of MPD_HOST is passwd@host:port.
+#
+sub _parse_env_var {
+    return (undef, undef, undef) unless defined $ENV{MPD_HOST};
+    return ($1, $2, $3)    if $ENV{MPD_HOST} =~ /^([^@]+)\@([^:@]+):(\d+)$/; # passwd@host:port
+    return ($1, $2, undef) if $ENV{MPD_HOST} =~ /^([^@]+)\@([^:@]+)$/;       # passwd@host
+    return (undef, $1, $2) if $ENV{MPD_HOST} =~ /^([^:@]+):(\d+)$/;          # host:port
+    return (undef, $ENV{MPD_HOST}, undef);
+}
+
+sub _build_host     { return ( _parse_env_var() )[1] || 'localhost'; }
+sub _build_port     { return $ENV{MPD_PORT}     || ( _parse_env_var() )[2] || 6600; }
+sub _build_password { return $ENV{MPD_PASSWORD} || ( _parse_env_var() )[0] || '';   }
+sub _build_collection { Audio::MPD::Collection->new( _mpd => $_[0] ); }
+sub _build_playlist   { Audio::MPD::Playlist  ->new( _mpd => $_[0] ); }
 
 
 #--
@@ -104,8 +91,8 @@ sub _connect_to_mpd_server {
 
     # try to connect to mpd.
     my $socket = IO::Socket::INET->new(
-        PeerAddr => $self->_host,
-        PeerPort => $self->_port,
+        PeerAddr => $self->host,
+        PeerPort => $self->port,
     )
     or die "Could not create socket: $!\n";
 
@@ -114,17 +101,17 @@ sub _connect_to_mpd_server {
     chomp $line;
     die "Not a mpd server - welcome string was: [$line]\n"
         if $line !~ /^OK MPD (.+)$/;
-    $self->version($1);
+    $self->set_version($1);
 
     # send password.
-    if ( $self->_password ) {
-        $socket->print( 'password ' . encode('utf-8', $self->_password) . "\n" );
+    if ( $self->password ) {
+        $socket->print( 'password ' . encode('utf-8', $self->password) . "\n" );
         $line = $socket->getline;
         die $line if $line =~ s/^ACK //;
     }
 
     # save socket
-    $self->_socket($socket);
+    $self->_set_socket($socket);
 }
 
 
@@ -145,7 +132,7 @@ sub _connect_to_mpd_server {
 sub _send_command {
     my ($self, $command) = @_;
 
-    $self->_connect_to_mpd_server if $self->_conntype == $ONCE;
+    $self->_connect_to_mpd_server if $self->conntype eq 'once';
     my $socket = $self->_socket;
 
     # ok, now we're connected - let's issue the command.
@@ -159,7 +146,7 @@ sub _send_command {
     }
 
     # close the socket.
-    $socket->close if $self->_conntype == $ONCE;
+    $socket->close if $self->conntype eq 'once';
 
     return @output;
 }
@@ -267,17 +254,12 @@ sub kill {
 
 
 #
-# $mpd->password( [$password] )
+# $mpd->set_password( [$password] )
 #
 # Change password used to communicate with MPD server to $password.
 # Empty string is assumed if $password is not supplied.
 #
-sub password {
-    my ($self, $passwd) = @_;
-    $passwd ||= '';
-    $self->_password($passwd);
-    $self->ping; # ping sends a command, and thus the password is sent
-}
+# implemented by password trigger (from moose)
 
 
 #
@@ -566,9 +548,9 @@ sub seekid {
 }
 
 
+no Moose;
+__PACKAGE__->meta->make_immutable;
 1;
-
-
 
 
 
@@ -581,9 +563,13 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
 =head1 VERSION
 
-version 0.19.10
+version 1.092950
 
-=pod 
+=begin Pod::Coverage
+
+BUILD
+
+=end Pod::Coverage
 
 =head1 SYNOPSIS
 
@@ -632,24 +618,27 @@ options:
 
 =over 4
 
-=item host => C<$hostname>
+=item host => $hostname
 
 defaults to environment var C<MPD_HOST>, then to 'localhost'. Note that
-C<MPD_HOST> can be of the form password@host.
+C<MPD_HOST> can be of the form C<password@host:port> (each of
+C<password@> or C<:port> can be omitted).
 
-=item port => C<$port>
+=item port => $port
 
-defaults to environment var C<MPD_PORT>, then to 6600.
+defaults to environment var C<MPD_PORT>, then to parsed C<MPD_HOST>,
+then to 6600.
 
 =item password => $password
 
-defaults to environment var C<MPD_PASSWORD>, then to ''.
+defaults to environment var C<MPD_PASSWORD>, then to parsed C<MPD_HOST>,
+then to empty string.
 
 =item conntype => $type
 
-change how the connection to mpd server is handled. It can be either
-C<$REUSE> to reuse the same connection or C<$ONCE> to open a new
-connection per command (default)
+change how the connection to mpd server is handled. It can be either the
+C<reuse> string to reuse the same connection or C<once> to open a new
+connection per command (default).
 
 =back 
 
@@ -674,7 +663,7 @@ can differ from the real mpd version. eg, mpd version 0.13.2 is
 
 Send a message to the MPD server telling it to shut down.
 
-=item $mpd->password( [$password] )
+=item $mpd->set_password( [$password] )
 
 Change password used to communicate with MPD server to C<$password>.
 Empty string is assumed if C<$password> is not supplied.
