@@ -14,6 +14,7 @@ examples/mpc.pl
 lib/Audio/MPD.pm
 lib/Audio/MPD/Collection.pm
 lib/Audio/MPD/Playlist.pm
+lib/Audio/MPD/Types.pm
 t/00-compile.t
 t/20-connection.t
 t/21-new.t
@@ -28,3 +29,4 @@ t/author-critic.t
 t/release-meta-yaml.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
+weaver.ini
