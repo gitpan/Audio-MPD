@@ -11,9 +11,7 @@ use warnings;
 use strict;
 
 package Audio::MPD::Playlist;
-our $VERSION = '1.093170';
-
-
+our $VERSION = '1.100430';
 # ABSTRACT: class to mess MPD's playlist
 
 use Moose;
@@ -194,7 +192,7 @@ Audio::MPD::Playlist - class to mess MPD's playlist
 
 =head1 VERSION
 
-version 1.093170
+version 1.100430
 
 =head1 SYNOPSIS
 
@@ -304,3 +302,4 @@ the same terms as the Perl 5 programming language system itself.
 
 
 __END__
+

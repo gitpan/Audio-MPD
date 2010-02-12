@@ -52,3 +52,4 @@ $mpd->fade(15);
 is( $mpd->status->xfade, 15, 'enabling fading' );
 $mpd->fade;
 is( $mpd->status->xfade,  0, 'disabling fading by default' );
+

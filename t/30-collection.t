@@ -182,3 +182,4 @@ is( $list[0]->title, 'ok-title', 'songs_with_title return correct objects' );
 is( scalar @list, 3, 'songs_with_title_partial return all the songs found' );
 isa_ok( $_, 'Audio::MPD::Common::Item::Song', 'songs_with_title_partial return AMCI::Songs' ) for @list;
 like( $list[0]->title, qr/title/, 'songs_with_title_partial return correct objects' );
+

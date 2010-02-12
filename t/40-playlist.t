@@ -175,3 +175,4 @@ ok( -f "$pdir/test-jq.m3u", 'save() creates a playlist' );
 # testing rm.
 $pl->rm( 'test-jq' );
 ok( ! -f "$pdir/test-jq.m3u", 'rm() removes a playlist' );
+

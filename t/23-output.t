@@ -62,3 +62,4 @@ $mpd->output_enable(0);
 sleep(1);
 $mpd->play; $mpd->pause;
 is( $mpd->status->error, undef, 'enabling output' );
+

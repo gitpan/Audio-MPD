@@ -93,3 +93,4 @@ SKIP: {
     $mpd->seekid(1);
     is( $mpd->status->time->sofar_secs, 1, 'seekid() defaults to current song' );
 }
+

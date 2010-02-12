@@ -11,9 +11,7 @@ use warnings;
 use strict;
 
 package Audio::MPD::Collection;
-our $VERSION = '1.093170';
-
-
+our $VERSION = '1.100430';
 # ABSTRACT: class to query MPD's collection
 
 use Moose;
@@ -219,7 +217,7 @@ Audio::MPD::Collection - class to query MPD's collection
 
 =head1 VERSION
 
-version 1.093170
+version 1.100430
 
 =head1 SYNOPSIS
 
@@ -356,3 +354,4 @@ the same terms as the Perl 5 programming language system itself.
 
 
 __END__
+

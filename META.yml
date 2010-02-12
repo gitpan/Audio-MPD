@@ -2,7 +2,11 @@
 abstract: 'class to talk to MPD (Music Player Daemon) servers'
 author:
   - 'Jerome Quelin'
-generated_by: 'Dist::Zilla version 1.093140'
+build_requires:
+  Module::Build: 0.3601
+configure_requires:
+  Module::Build: 0.3601
+generated_by: 'Dist::Zilla version 1.100160'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -11,16 +15,16 @@ name: Audio-MPD
 provides:
   Audio::MPD:
     file: lib/Audio/MPD.pm
-    version: 1.093170
+    version: 1.100430
   Audio::MPD::Collection:
     file: lib/Audio/MPD/Collection.pm
-    version: 1.093170
+    version: 1.100430
   Audio::MPD::Playlist:
     file: lib/Audio/MPD/Playlist.pm
-    version: 1.093170
+    version: 1.100430
   Audio::MPD::Types:
     file: lib/Audio/MPD/Types.pm
-    version: 1.093170
+    version: 1.100430
 requires:
   Audio::MPD::Common::Item: 0
   Audio::MPD::Common::Stats: 0
@@ -30,6 +34,7 @@ requires:
   Encode: 0
   English: 0
   File::Find: 0
+  File::Temp: 0
   Getopt::Euclid: 0
   IO::Socket: 0
   Moose: 0
@@ -37,7 +42,6 @@ requires:
   MooseX::Has::Sugar: 0
   MooseX::SemiAffordanceAccessor: 0
   Proc::Daemon: 0
-  Sub::Exporter: 0
   Test::Corpus::Audio::MPD: 1.092920
   Test::More: 0
   Time::HiRes: 0
@@ -47,4 +51,4 @@ resources:
   MailingList: http://groups.google.com/group/audio-mpd
   homepage: http://search.cpan.org/dist/Audio-MPD
   repository: http://github.com/jquelin/audio-mpd
-version: 1.093170
+version: 1.100430
