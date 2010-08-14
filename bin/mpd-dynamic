@@ -1,15 +1,21 @@
 #!/usr/bin/perl
-# 
+#
 # This file is part of Audio-MPD
-# 
+#
 # This software is copyright (c) 2007 by Jerome Quelin.
-# 
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 
 use strict;
 use warnings;
+
+package main;
+BEGIN {
+  $main::VERSION = '1.102260';
+}
+# ABSTRACT: a dynamic playlist for mpd
 
 use Audio::MPD;
 use DB_File;
@@ -92,23 +98,17 @@ sub debug {
     warn "$date $msg";
 }
 
-__END__
 
+
+=pod
 
 =head1 NAME
 
-mpd-dynamic - a dynamic playlist for mpd
-
-
-=head1 USAGE
-
-    mpd-dynamic [options]
-
+main - a dynamic playlist for mpd
 
 =head1 VERSION
 
-This is mpd-dynamic version 0.4
-
+version 1.102260
 
 =head1 DESCRIPTION
 
@@ -127,6 +127,9 @@ This way, you can fire C<mpd> and C<mpd-dynamic> and forget completely
 about your music (especially since C<mpd-dynamic> is a low-resource program):
 it will just be there! :-)
 
+=head1 USAGE
+
+    mpd-dynamic [options]
 
 =head1 OPTIONS
 
@@ -134,42 +137,34 @@ it will just be there! :-)
 
 You can customize the usage of mpd-dynamic with the following options:
 
-
 =over 4
 
 =item -o[ld] <old>
 
 Number of old tracks to keep in the backlog. Defaults to 10.
 
-=for Euclid:
-    old.type:     integer >= 0
+=for Euclid: old.type:     integer >= 0
     old.default:  10
-
 
 =item -n[ew] <new>
 
 Number of new tracks to keep in the to-be-played playlist. Defaults to 10.
 
-=for Euclid:
-    new.type:     integer > 0
+=for Euclid: new.type:     integer > 0
     new.default:  10
-
 
 =item -s[leep] <sleep>
 
 Time spent sleeping (in seconds) before checking if playlist should be
 updated. Default to 5 seconds.
 
-=for Euclid:
-    sleep.type:     number > 0
+=for Euclid: sleep.type:     number > 0
     sleep.default:  5
-
 
 =item -d[ebug]
 
 Run mpd-dynamic in debug mode. In particular, the program will not daemonize
 itself. Default to false.
-
 
 =item -e[ncoding] <encoding>
 
@@ -177,10 +172,8 @@ Print debug messages with this encoding. Since mpd-dynamic is meant to be a
 silent daemon, this option will not be used outside of debug mode. Default
 to C<utf-8>.
 
-=for Euclid:
-    encoding.type:     string
+=for Euclid: encoding.type:     string
     encoding.default:  'utf-8'
-
 
 =item --version
 
@@ -192,12 +185,10 @@ to C<utf-8>.
 
 Print the usual program information
 
-
 =back
 
 Note however that those flags are optional: since C<mpd-dynamic> comes with
 some sane defaults, you can fire C<mpd-dynamic> as is.
-
 
 =head2 Ratings
 
@@ -205,9 +196,10 @@ You can also take advantage of ratings if you want. With those options, songs
 need to have at least a given rating (or no rating yet) to be inserted: this
 way, you will only listen to your favorite songs!
 
+Ratings can be created / updated with C<mpd-rate>.
+
 Note that if you supply a non-existant rating db-file, the rating mechanism
 will be ignored. The following options control the rating mechanism:
-
 
 =over 4
 
@@ -217,27 +209,21 @@ The path of a db file with the ratings per song. The keys are the song path
 (relative to MPD root), and the value is an integer (the rating). Default to
 C<~/.mpd/ratings.db>.
 
-=for Euclid:
-    ratings.type:     readable
+=for Euclid: ratings.type:     readable
     ratings.default:  "$ENV{HOME}/.mpd/ratings.db"
-
 
 =item -m[in[imum]] <min>
 
 The minimum rating for a song to be inserted in the playlist. Default to 4.
 
-=for Euclid:
-    min.type:     integer > 0
+=for Euclid: min.type:     integer > 0
     min.default:  4
 
-
 =back
-
 
 =head1 AUTHOR
 
 Jerome Quelin, C<< <jquelin@cpan.org> >>
-
 
 =head1 COPYRIGHT & LICENSE
 
@@ -246,4 +232,19 @@ Copyright (c) 2007-2009 Jerome Quelin, all rights reserved.
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
+=head1 AUTHOR
+
+Jerome Quelin
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2007 by Jerome Quelin.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
+
+
+__END__
+

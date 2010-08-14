@@ -1,17 +1,19 @@
-# 
+#
 # This file is part of Audio-MPD
-# 
+#
 # This software is copyright (c) 2007 by Jerome Quelin.
-# 
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use 5.008;
 use warnings;
 use strict;
 
 package Audio::MPD;
-our $VERSION = '1.100430';
+BEGIN {
+  $Audio::MPD::VERSION = '1.102260';
+}
 # ABSTRACT: class to talk to MPD (Music Player Daemon) servers
 
 use Audio::MPD::Collection;
@@ -450,7 +452,7 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
 =head1 VERSION
 
-version 1.100430
+version 1.102260
 
 =head1 SYNOPSIS
 
@@ -720,7 +722,7 @@ L<http://cpanratings.perl.org/d/Audio-MPD>
 
 =head1 AUTHOR
 
-  Jerome Quelin
+Jerome Quelin
 
 =head1 COPYRIGHT AND LICENSE
 

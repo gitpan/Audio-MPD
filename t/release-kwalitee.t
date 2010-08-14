@@ -9,19 +9,15 @@
 #
 
 BEGIN {
-  unless ($ENV{AUTHOR_TESTING}) {
+  unless ($ENV{RELEASE_TESTING}) {
     require Test::More;
-    Test::More::plan(skip_all => 'these tests are for testing by the author');
+    Test::More::plan(skip_all => 'these tests are for release candidate testing');
   }
 }
 
 
-use strict;
-use warnings;
-
 use Test::More;
-use English qw(-no_match_vars);
 
-eval "use Test::Perl::Critic";
-plan skip_all => 'Test::Perl::Critic required to criticise code' if $@;
-all_critic_ok();
+eval "use Test::Kwalitee";
+plan skip_all => "Test::Kwalitee required for testing kwalitee"
+  if $@;

@@ -1,17 +1,19 @@
-# 
+#
 # This file is part of Audio-MPD
-# 
+#
 # This software is copyright (c) 2007 by Jerome Quelin.
-# 
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use 5.008;
 use warnings;
 use strict;
 
 package Audio::MPD::Playlist;
-our $VERSION = '1.100430';
+BEGIN {
+  $Audio::MPD::Playlist::VERSION = '1.102260';
+}
 # ABSTRACT: class to mess MPD's playlist
 
 use Moose;
@@ -192,7 +194,7 @@ Audio::MPD::Playlist - class to mess MPD's playlist
 
 =head1 VERSION
 
-version 1.100430
+version 1.102260
 
 =head1 SYNOPSIS
 
@@ -289,7 +291,7 @@ return value.
 
 =head1 AUTHOR
 
-  Jerome Quelin
+Jerome Quelin
 
 =head1 COPYRIGHT AND LICENSE
 
