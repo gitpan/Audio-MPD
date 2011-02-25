@@ -12,21 +12,23 @@ use strict;
 
 package Audio::MPD;
 BEGIN {
-  $Audio::MPD::VERSION = '1.102260';
+  $Audio::MPD::VERSION = '1.110560';
 }
 # ABSTRACT: class to talk to MPD (Music Player Daemon) servers
 
-use Audio::MPD::Collection;
 use Audio::MPD::Common::Item;
 use Audio::MPD::Common::Stats;
 use Audio::MPD::Common::Status;
-use Audio::MPD::Playlist;
-use Audio::MPD::Types;
+use Audio::MPD::Common::Output;
 use Encode;
 use IO::Socket;
 use Moose;
 use MooseX::Has::Sugar;
 use MooseX::SemiAffordanceAccessor;
+
+use Audio::MPD::Collection;
+use Audio::MPD::Playlist;
+use Audio::MPD::Types;
 
 
 
@@ -281,6 +283,27 @@ sub volume {
 
 
 
+sub outputs {
+    my ($self) = @_;
+
+    my @lines = $self->_send_command("outputs\n");
+    my (@outputs, %param);
+
+    # parse lines in reverse order since "id" lines come first
+    foreach my $line (reverse @lines) {
+        my ($k,$v) = split /:\s/, $line, 2;
+        $k =~ s/^output//;
+        $param{$k} = $v;
+        next unless $k eq 'id'; # last output param
+        unshift @outputs, Audio::MPD::Common::Output->new(%param);
+        %param = ();
+    }
+
+    return @outputs;
+}
+
+
+
 sub output_enable {
     my ($self, $output) = @_;
     $self->_send_command("enableoutput $output\n");
@@ -452,7 +475,7 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
 =head1 VERSION
 
-version 1.102260
+version 1.110560
 
 =head1 SYNOPSIS
 
@@ -537,101 +560,144 @@ per command (default).
 
 =head1 METHODS
 
-=head2 my $mpd = Audio::MPD->new( \%opts );
+=head2 new
+
+    my $mpd = Audio::MPD->new( \%opts );
 
 This is the constructor for L<Audio::MPD>. One can specify any of the
 attributes (cf above).
 
 =head1 CONTROLLING THE SERVER
 
-=head2 $mpd->ping;
+=head2 ping
+
+    $mpd->ping;
 
 Sends a ping command to the mpd server.
 
-=head2 my $version = $mpd->version;
+=head2 version
+
+    my $version = $mpd->version;
 
 Return mpd's version number as advertised during connection. Note that
 mpd returns B<protocol> version when connected. This protocol version
 can differ from the real mpd version. eg, mpd version 0.13.2 is
 "speaking" and thus advertising version 0.13.0.
 
-=head2 $mpd->kill;
+=head2 kill
+
+    $mpd->kill;
 
 Send a message to the MPD server telling it to shut down.
 
-=head2 $mpd->set_password( [$password] );
+=head2 set_password
+
+    $mpd->set_password( [$password] );
 
 Change password used to communicate with MPD server to C<$password>.
 Empty string is assumed if C<$password> is not supplied.
 
-=head2 $mpd->updatedb( [$path] );
+=head2 updatedb
+
+    $mpd->updatedb( [$path] );
 
 Force mpd to recan its collection. If C<$path> (relative to MPD's music
 directory) is supplied, MPD will only scan it - otherwise, MPD will
 rescan its whole collection.
 
-=head2 my @handlers = $mpd->urlhandlers;
+=head2 urlhandlers
+
+    my @handlers = $mpd->urlhandlers;
 
 Return an array of supported URL schemes.
 
 =head1 HANDLING VOLUME & OUTPUT
 
-=head2 $mpd->volume( [+][-]$volume );
+=head2 volume
+
+    $mpd->volume( [+][-]$volume );
 
 Sets the audio output volume percentage to absolute C<$volume>.  If
 C<$volume> is prefixed by '+' or '-' then the volume is changed
 relatively by that value.
 
-=head2 $mpd->output_enable( $output );
+=head2 outputs
+
+    my @outputs = $mpd->outputs( );
+
+Return a list of C<Audio::MPD::Common::Outputs> with all outputs
+available within MPD.
+
+=head2 output_enable
+
+    $mpd->output_enable( $output );
 
 Enable the specified audio output. C<$output> is the ID of the audio
 output.
 
-=head2 $mpd->output_disable( $output );
+=head2 output_disable
+
+    $mpd->output_disable( $output );
 
 Disable the specified audio output. C<$output> is the ID of the audio
 output.
 
 =head1 RETRIEVING INFO FROM CURRENT STATE
 
-=head2 my $stats = $mpd->stats;
+=head2 stats
+
+    my $stats = $mpd->stats;
 
 Return an L<Audio::MPD::Common::Stats> object with the current statistics
 of MPD. See the associated pod for more information.
 
-=head2 my $status = $mpd->status;
+=head2 status
+
+    my $status = $mpd->status;
 
 Return an L<Audio::MPD::Common::Status> object with various information on
 current MPD server settings. See the associated pod for more information.
 
-=head2 my $song = $mpd->current;
+=head2 current
+
+    my $song = $mpd->current;
 
 Return an L<Audio::MPD::Common::Item::Song> representing the song currently
 playing.
 
-=head2 my $song = $mpd->song( [$song] );
+=head2 song
+
+    my $song = $mpd->song( [$song] );
 
 Return an L<Audio::MPD::Common::Item::Song> representing the song number
 C<$song>. If C<$song> is not supplied, returns the current song.
 
-=head2 my $song = $mpd->songid( [$songid] );
+=head2 songid
+
+    my $song = $mpd->songid( [$songid] );
 
 Return an L<Audio::MPD::Common::Item::Song> representing the song with id
 C<$songid>. If C<$songid> is not supplied, returns the current song.
 
 =head1 ALTERING MPD SETTINGS
 
-=head2 $mpd->repeat( [$repeat] );
+=head2 repeat
+
+    $mpd->repeat( [$repeat] );
 
 Set the repeat mode to C<$repeat> (1 or 0). If C<$repeat> is not
 specified then the repeat mode is toggled.
 
-=head2 $mpd->random( [$random] );
+=head2 random
+
+    $mpd->random( [$random] );
 
 Set the random mode to C<$random> (1 or 0). If C<$random> is not
 specified then the random mode is toggled.
 
-=head2 $mpd->fade( [$seconds] );
+=head2 fade
+
+    $mpd->fade( [$seconds] );
 
 Enable crossfading and set the duration of crossfade between songs.  If
 C<$seconds> is not specified or $seconds is 0, then crossfading is
@@ -639,42 +705,58 @@ disabled.
 
 =head1 CONTROLLING PLAYBACK
 
-=head2 $mpd->play( [$song] );
+=head2 play
+
+    $mpd->play( [$song] );
 
 Begin playing playlist at song number C<$song>. If no argument supplied,
 resume playing.
 
-=head2 $mpd->playid( [$songid] );
+=head2 playid
+
+    $mpd->playid( [$songid] );
 
 Begin playing playlist at song ID C<$songid>. If no argument supplied,
 resume playing.
 
-=head2 $mpd->pause( [$state] );
+=head2 pause
+
+    $mpd->pause( [$state] );
 
 Pause playback. If C<$state> is 0 then the current track is unpaused,
 if C<$state> is 1 then the current track is paused.
 
 Note that if C<$state> is not given, pause state will be toggled.
 
-=head2 $mpd->stop;
+=head2 stop
+
+    $mpd->stop;
 
 Stop playback.
 
-=head2 $mpd->next;
+=head2 next
+
+    $mpd->next;
 
 Play next song in playlist.
 
-=head2 $mpd->prev;
+=head2 prev
+
+    $mpd->prev;
 
 Play previous song in playlist.
 
-=head2 $mpd->seek( $time, [$song]);
+=head2 seek
+
+    $mpd->seek( $time, [$song]);
 
 Seek to C<$time> seconds in song number C<$song>. If C<$song> number is
 not specified then the perl module will try and seek to C<$time> in the
 current song.
 
-=head2 $mpd->seekid( $time, $songid );
+=head2 seekid
+
+    $mpd->seekid( $time, $songid );
 
 Seek to C<$time> seconds in song ID C<$songid>. If C<$song> number is
 not specified then the perl module will try and seek to C<$time> in the

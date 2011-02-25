@@ -12,7 +12,7 @@ use strict;
 
 package Audio::MPD::Playlist;
 BEGIN {
-  $Audio::MPD::Playlist::VERSION = '1.102260';
+  $Audio::MPD::Playlist::VERSION = '1.110560';
 }
 # ABSTRACT: class to mess MPD's playlist
 
@@ -194,7 +194,7 @@ Audio::MPD::Playlist - class to mess MPD's playlist
 
 =head1 VERSION
 
-version 1.102260
+version 1.110560
 
 =head1 SYNOPSIS
 
@@ -213,78 +213,108 @@ C<playlist()> accessor.
 
 =head1 RETRIEVING INFORMATION
 
-=head2 my @items = $pl->as_items;
+=head2 as_items
+
+    my @items = $pl->as_items;
 
 Return an array of L<Audio::MPD::Common::Item::Song>s, one for each of the
 songs in the current playlist.
 
-=head2 my @items = $pl->items_changed_since( $plversion );
+=head2 items_changed_since
+
+    my @items = $pl->items_changed_since( $plversion );
 
 Return a list with all the songs (as L<Audio::MPD::Common::Item::Song> objects)
 added to the playlist since playlist C<$plversion>.
 
 =head1 ADDING / REMOVING SONGS
 
-=head2 $pl->add( $path [, $path [...] ] );
+=head2 add
+
+    $pl->add( $path [, $path [...] ] );
 
 Add the songs identified by C<$path> (relative to MPD's music directory) to the
 current playlist. No return value.
 
-=head2 $pl->delete( $song [, $song [...] ] );
+=head2 delete
+
+    $pl->delete( $song [, $song [...] ] );
 
 Remove the specified C<$song> numbers (starting from 0) from the current
 playlist. No return value.
 
-=head2 $pl->deleteid( $songid [, $songid [...] ] );
+=head2 deleteid
+
+    $pl->deleteid( $songid [, $songid [...] ] );
 
 Remove the specified C<$songid>s (as assigned by mpd when inserted in playlist)
 from the current playlist. No return value.
 
-=head2 $pl->clear;
+=head2 clear
+
+    $pl->clear;
 
 Remove all the songs from the current playlist. No return value.
 
-=head2 $pl->crop;
+=head2 crop
+
+    $pl->crop;
 
 Remove all of the songs from the current playlist B<except> the
 song currently playing.
 
 =head1 CHANGING PLAYLIST ORDER
 
-=head2 $pl->shuffle;
+=head2 shuffle
+
+    $pl->shuffle;
 
 Shuffle the current playlist. No return value.
 
-=head2 $pl->swap( $song1, $song2 );
+=head2 swap
+
+    $pl->swap( $song1, $song2 );
 
 Swap positions of song number C<$song1> and C<$song2> in the current
 playlist. No return value.
 
-=head2 $pl->swapid( $songid1, $songid2 );
+=head2 swapid
+
+    $pl->swapid( $songid1, $songid2 );
 
 Swap the postions of song ID C<$songid1> with song ID C<$songid2> in the
 current playlist. No return value.
 
-=head2 $pl->move( $song, $newpos );
+=head2 move
+
+    $pl->move( $song, $newpos );
 
 Move song number C<$song> to the position C<$newpos>. No return value.
 
-=head2 $pl->moveid( $songid, $newpos );
+=head2 moveid
+
+    $pl->moveid( $songid, $newpos );
 
 Move song ID C<$songid> to the position C<$newpos>. No return value.
 
 =head1 MANAGING PLAYLISTS
 
-=head2 $pl->load( $playlist );
+=head2 load
+
+    $pl->load( $playlist );
 
 Load list of songs from specified C<$playlist> file. No return value.
 
-=head2 $pl->save( $playlist );
+=head2 save
+
+    $pl->save( $playlist );
 
 Save the current playlist to a file called C<$playlist> in MPD's playlist
 directory. No return value.
 
-=head2 $pl->rm( $playlist );
+=head2 rm
+
+    $pl->rm( $playlist );
 
 Delete playlist named C<$playlist> from MPD's playlist directory. No
 return value.

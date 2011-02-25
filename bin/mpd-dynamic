@@ -13,7 +13,7 @@ use warnings;
 
 package main;
 BEGIN {
-  $main::VERSION = '1.102260';
+  $main::VERSION = '1.110560';
 }
 # ABSTRACT: a dynamic playlist for mpd
 
@@ -108,7 +108,7 @@ main - a dynamic playlist for mpd
 
 =head1 VERSION
 
-version 1.102260
+version 1.110560
 
 =head1 DESCRIPTION
 
