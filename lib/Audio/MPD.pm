@@ -12,7 +12,7 @@ use strict;
 
 package Audio::MPD;
 BEGIN {
-  $Audio::MPD::VERSION = '1.110560';
+  $Audio::MPD::VERSION = '1.111200';
 }
 # ABSTRACT: class to talk to MPD (Music Player Daemon) servers
 
@@ -475,7 +475,7 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
 =head1 VERSION
 
-version 1.110560
+version 1.111200
 
 =head1 SYNOPSIS
 
@@ -516,7 +516,7 @@ would be then on your own to deal with disconnections.
 To search the collection, use the C<collection()> accessor, returning the
 associated L<Audio::MPD::Collection> object. You will then be able to call:
 
-    $mpd->collection->random_song;
+    $mpd->collection->all_songs;
 
 See L<Audio::MPD::Collection> documentation for more details on available
 methods.

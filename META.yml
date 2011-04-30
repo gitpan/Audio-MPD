@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   Module::Build: 0.3601
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.102400'
+generated_by: 'Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.110930'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -20,16 +20,16 @@ name: Audio-MPD
 provides:
   Audio::MPD:
     file: lib/Audio/MPD.pm
-    version: 1.110560
+    version: 1.111200
   Audio::MPD::Collection:
     file: lib/Audio/MPD/Collection.pm
-    version: 1.110560
+    version: 1.111200
   Audio::MPD::Playlist:
     file: lib/Audio/MPD/Playlist.pm
-    version: 1.110560
+    version: 1.111200
   Audio::MPD::Types:
     file: lib/Audio/MPD/Types.pm
-    version: 1.110560
+    version: 1.111200
 requires:
   Audio::MPD::Common::Item: 0
   Audio::MPD::Common::Output: 0
@@ -50,8 +50,8 @@ resources:
   X_mailing_list: http://groups.google.com/group/audio-mpd
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Audio-MPD
   homepage: http://search.cpan.org/dist/Audio-MPD/
-  repository: http://github.com/jquelin/audio-mpd
-version: 1.110560
+  repository: git://github.com/jquelin/audio-mpd.git
+version: 1.111200
 x_Dist_Zilla:
   plugins:
     -
@@ -77,7 +77,7 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::CompileTests
       name: '@Filter/CompileTests'
-      version: 1.103030
+      version: 1.110930
     -
       class: Dist::Zilla::Plugin::HasVersionTests
       name: '@Filter/HasVersionTests'
@@ -99,13 +99,9 @@ x_Dist_Zilla:
       name: '@Filter/PodSyntaxTests'
       version: 4.200004
     -
-      class: Dist::Zilla::Plugin::PortabilityTests
-      name: '@Filter/PortabilityTests'
-      version: 1.101420
-    -
       class: Dist::Zilla::Plugin::ReportVersions::Tiny
       name: '@Filter/ReportVersions::Tiny'
-      version: 1.02
+      version: 1.03
     -
       class: Dist::Zilla::Plugin::PruneCruft
       name: '@Filter/PruneCruft'
@@ -141,7 +137,7 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::Prepender
       name: '@Filter/Prepender'
-      version: 1.101590
+      version: 1.103470
     -
       class: Dist::Zilla::Plugin::ExecDir
       name: '@Filter/ExecDir'
@@ -153,7 +149,7 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::Bugtracker
       name: '@Filter/Bugtracker'
-      version: 1.102670
+      version: 1.111080
     -
       class: Dist::Zilla::Plugin::Homepage
       name: '@Filter/Homepage'
@@ -161,11 +157,11 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::Repository
       name: '@Filter/Repository'
-      version: 0.15
+      version: 0.17
     -
       class: Dist::Zilla::Plugin::MetaProvides::Package
       name: '@Filter/MetaProvides::Package'
-      version: 1.11034304
+      version: 1.12060501
     -
       class: Dist::Zilla::Plugin::MetaConfig
       name: '@Filter/MetaConfig'
@@ -199,25 +195,33 @@ x_Dist_Zilla:
       name: '@Filter/CheckChangeLog'
       version: 0.01
     -
-      class: Dist::Zilla::Plugin::UploadToCPAN
-      name: '@Filter/UploadToCPAN'
-      version: 4.200004
-    -
       class: Dist::Zilla::Plugin::Git::Check
-      name: '@Filter/Git/Check'
+      name: '@Filter/Git::Check'
       version: 1.110500
     -
       class: Dist::Zilla::Plugin::Git::Commit
-      name: '@Filter/Git/Commit'
+      name: '@Filter/Git::Commit'
+      version: 1.110500
+    -
+      class: Dist::Zilla::Plugin::Git::CommitBuild
+      name: '@Filter/Git::CommitBuild'
       version: 1.110500
     -
       class: Dist::Zilla::Plugin::Git::Tag
-      name: '@Filter/Git/Tag'
+      name: '@Filter/TagMaster'
+      version: 1.110500
+    -
+      class: Dist::Zilla::Plugin::Git::Tag
+      name: '@Filter/TagRelease'
       version: 1.110500
     -
       class: Dist::Zilla::Plugin::Git::Push
-      name: '@Filter/Git/Push'
+      name: '@Filter/Git::Push'
       version: 1.110500
+    -
+      class: Dist::Zilla::Plugin::UploadToCPAN
+      name: '@Filter/UploadToCPAN'
+      version: 4.200004
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':InstallModules'

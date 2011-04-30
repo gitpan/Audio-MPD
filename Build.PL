@@ -21,7 +21,7 @@ my %module_build_args = (
     'Jerome Quelin'
   ],
   'dist_name' => 'Audio-MPD',
-  'dist_version' => '1.110560',
+  'dist_version' => '1.111200',
   'license' => 'perl',
   'module_name' => 'Audio::MPD',
   'recommends' => {},
