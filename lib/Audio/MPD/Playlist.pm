@@ -11,11 +11,8 @@ use warnings;
 use strict;
 
 package Audio::MPD::Playlist;
-{
-  $Audio::MPD::Playlist::VERSION = '1.120610';
-}
 # ABSTRACT: class to mess MPD's playlist
-
+$Audio::MPD::Playlist::VERSION = '2.000';
 use Moose;
 use MooseX::Has::Sugar;
 use MooseX::SemiAffordanceAccessor;
@@ -184,7 +181,7 @@ no Moose;
 __PACKAGE__->meta->make_immutable;
 1;
 
-
+__END__
 
 =pod
 
@@ -194,7 +191,7 @@ Audio::MPD::Playlist - class to mess MPD's playlist
 
 =head1 VERSION
 
-version 1.120610
+version 2.000
 
 =head1 SYNOPSIS
 
@@ -331,7 +328,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-

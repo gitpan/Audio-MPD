@@ -11,17 +11,15 @@ use warnings;
 use strict;
 
 package Audio::MPD::Types;
-{
-  $Audio::MPD::Types::VERSION = '1.120610';
-}
 # ABSTRACT: types used in the distribution
-
+$Audio::MPD::Types::VERSION = '2.000';
 use Moose::Util::TypeConstraints;
 
-enum CONNTYPE  => qw{ reuse once };
+enum CONNTYPE => [ qw{ reuse once } ];
 
 1;
 
+__END__
 
 =pod
 
@@ -31,7 +29,7 @@ Audio::MPD::Types - types used in the distribution
 
 =head1 VERSION
 
-version 1.120610
+version 2.000
 
 =head1 DESCRIPTION
 
@@ -60,7 +58,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-

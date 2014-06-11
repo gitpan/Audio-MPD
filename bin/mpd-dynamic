@@ -97,7 +97,7 @@ sub debug {
     warn "$date $msg";
 }
 
-
+__END__
 
 =pod
 
@@ -107,7 +107,7 @@ mpd-dynamic - a dynamic playlist for mpd
 
 =head1 VERSION
 
-version 1.120610
+version 2.000
 
 =head1 DESCRIPTION
 
@@ -232,7 +232,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-

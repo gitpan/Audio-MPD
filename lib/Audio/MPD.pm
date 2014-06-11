@@ -11,11 +11,8 @@ use warnings;
 use strict;
 
 package Audio::MPD;
-{
-  $Audio::MPD::VERSION = '1.120610';
-}
 # ABSTRACT: class to talk to MPD (Music Player Daemon) servers
-
+$Audio::MPD::VERSION = '2.000';
 use Audio::MPD::Common::Item;
 use Audio::MPD::Common::Stats;
 use Audio::MPD::Common::Status;
@@ -465,7 +462,7 @@ no Moose;
 __PACKAGE__->meta->make_immutable;
 1;
 
-
+__END__
 
 =pod
 
@@ -475,7 +472,7 @@ Audio::MPD - class to talk to MPD (Music Player Daemon) servers
 
 =head1 VERSION
 
-version 1.120610
+version 2.000
 
 =head1 SYNOPSIS
 
@@ -778,7 +775,7 @@ You can look for information on this module at:
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Audio-MPD>
+L<http://metacpan.org/release/Audio-MPD>
 
 =item * See open / report bugs
 
@@ -814,7 +811,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-
